@@ -148,6 +148,6 @@ Page #:
 
   makeWindow { |bounds|
     bounds = bounds ?? Window.screenBounds.width_(800);
-    ^ShowCtrlWindow(filepath, bounds).showCtrl_(this);
+    ^ShowCtrlWindow(filepath, bounds).cueList_(this);
   }
 }

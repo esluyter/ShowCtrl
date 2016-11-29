@@ -1,0 +1,91 @@
+TITLE:: ShowCtrlView
+summary:: a view to interface with a CueList
+categories:: Live Show Control
+related:: Classes/CueList, Classes/ShowCtrlWindow
+
+DESCRIPTION::
+Work-in-progress view to interface with a LINK::Classes/CueList::
+
+
+CLASSMETHODS::
+
+METHOD:: new
+
+
+
+INSTANCEMETHODS::
+
+PRIVATE:: init
+PRIVATE:: makeInteraction
+PRIVATE:: handleKey
+PRIVATE:: confirmBox
+PRIVATE:: dialogBox
+PRIVATE:: update
+
+PRIVATE:: updateUnsaved
+PRIVATE:: updateCurrentScene
+PRIVATE:: updateScenes
+
+SUBSECTION:: Setting the CueList
+METHOD:: showCtrl
+Get/set the LINK::Classes/CueList::
+
+SUBSECTION:: Wrappers around CueList functionality
+
+METHOD:: gotoScene
+Display dialog box to input cue number
+
+METHOD:: renameScene
+Display dialog box to rename current cue
+
+METHOD:: deleteScene
+Display a confirmation to delete current cue
+
+METHOD:: saveScene
+Make sure function compiles, save current cue to LINK::Classes/CueList:: and display visual feedback on success or failure
+
+METHOD:: addSceneAbove
+Display dialog box to name scene to add above
+
+METHOD:: addSceneBelow
+Display dialog box to name scene to add below
+
+
+SUBSECTION:: These should really move to CueList
+
+METHOD:: moveSceneUp
+
+METHOD:: moveSceneDown
+
+
+SUBSECTION:: Adjusting layout
+
+METHOD:: leftPanelWidth
+Get/set the width of the left panel (you can also do this through mouse interaction)
+
+
+SUBSECTION:: Refresh view
+
+METHOD:: colorizeText
+Show syntax highlighting
+
+ARGUMENT:: wholething
+True to color whole function, false for just the current line
+
+
+METHOD:: refresh
+Updates visual display of cue list, current cue, and unsaved status;
+
+
+
+
+
+
+
+
+
+EXAMPLES::
+
+code::
+(some example code)
+::

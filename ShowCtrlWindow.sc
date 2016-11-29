@@ -1,6 +1,6 @@
 ShowCtrlView : SCViewHolder {
-  var showCtrl;
-  var gui, leftPanelWidth, bottomPanelHeight = 50, margin = 5, buttonWidth = 75;
+  var <showCtrl;
+  var gui, <leftPanelWidth, bottomPanelHeight = 50, margin = 5, buttonWidth = 75;
   var dragStart;
 
   *new { |parent, bounds|
@@ -524,7 +524,11 @@ ShowCtrlWindow : SCViewHolder {
     view = ShowCtrlView(win.view).resize_(5);
   }
 
-  showCtrl_ { |showCtrl|
-    view.showCtrl_(showCtrl);
+  cueList_ { |cueList|
+    view.showCtrl_(cueList);
+  }
+
+  cueList {
+    ^view.showCtrl;
   }
 }
