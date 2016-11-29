@@ -166,7 +166,7 @@ CL1 {
     this.makeMidifuncs;
   }
 
-  makeMidifuncs {
+  makeMidifuncs { |debug = false|
     midifuncCc = MIDIFunc.cc({ |val, num|
       var boardChan;
       if (num < 25) {
@@ -196,14 +196,14 @@ CL1 {
 
     midifuncSysex = MIDIFunc.sysex({ |data, src|
       if (src == uid) {
-        data.collect(_.asHexString).collect(_[6..7]).postcs;
+        if (debug) { data.collect(_.asHexString).collect(_[6..7]).postcs };
 
         if (data[0..10] == Int8Array[0xF0, 0x43, 0x18, 0x3E, 0x19, 0x01, 0x00, 0x37, 0x00, 0x00, 0x00]) { // fader position
           var boardChan = data[11];
           var digitA = data[15];
           var digitB = data[16];
 
-          [\fader, \boardChan, boardChan, \digitA, digitA, \digitB, digitB].postln;
+          if (debug) { [\fader, \boardChan, boardChan, \digitA, digitA, \digitB, digitB].postln };
 
           faderPositions[boardChan] = this.class.sysexToDb(digitA, digitB);
           fadeRoutines[boardChan].stop;
@@ -221,7 +221,7 @@ CL1 {
           var digitA = data[15];
           var digitB = data[16];
 
-          [\DCA, \boardChan, boardChan, \digitA, digitA, \digitB, digitB].postln;
+          if (debug) { [\DCA, \boardChan, boardChan, \digitA, digitA, \digitB, digitB].postln };
 
           dcaPositions[boardChan] = this.class.sysexToDb(digitA, digitB);
           this.changed("DCA", boardChan);
@@ -244,7 +244,7 @@ CL1 {
           var sendNum = ((data[9] - 3) / 3).floor;
           var parameter = ((data[9] - 3) % 3);
 
-          [\mixSend, \boardChan, boardChan, \digitA, digitA, \digitB, digitB].postln;
+          if (debug) { [\mixSend, \boardChan, boardChan, \digitA, digitA, \digitB, digitB].postln };
 
           if (parameter == 0) { // on/off
             sendIsOn[boardChan][sendNum] = digitB == 1;
@@ -267,7 +267,7 @@ CL1 {
           var sendNum = ((data[9] - 3) / 3).floor;
           var parameter = ((data[9] - 3) % 3);
 
-          [\matrixSend, \boardChan, boardChan, \digitA, digitA, \digitB, digitB].postln;
+          if (debug) { [\matrixSend, \boardChan, boardChan, \digitA, digitA, \digitB, digitB].postln };
 
           if (parameter == 0) { // on/off
             sendIsOn[boardChan][sendNum + 24] = digitB == 1;
