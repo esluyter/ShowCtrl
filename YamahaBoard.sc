@@ -122,11 +122,11 @@ CL1 {
 
   /////// --- instance stuff ---- ////////
 
-  *new { |deviceName, portName|
-    ^super.new.init(deviceName, portName);
+  *new { |deviceName, portName, midichan = 8, initread = true, debug = false|
+    ^super.new.init(deviceName, portName, midichan, initread, debug);
   }
 
-  init { |argdevice, argport|
+  init { |argdevice, argport, argmidichan, initread, debug|
     deviceName = argdevice;
     portName = argport;
 
@@ -157,8 +157,8 @@ CL1 {
     fadeRoutines = nil ! 48;
     fadeSendRoutines = (nil!32)!48;
 
-    this.makeMidifuncs;
-    this.initBoardRead;
+    this.makeMidifuncs(debug);
+    if (initread) { this.initBoardRead };
     CmdPeriod.add(this);
   }
 
@@ -429,6 +429,8 @@ CL1 {
     };
   }
 
+  setSend { |...args| this.setSends(*args); }
+
   setSends { |boardChans ...args|
     var currentType = \mix;
 
@@ -549,6 +551,8 @@ CL1 {
       };
     };
   }
+
+  fadeSend { |...args| this.fadeSends(*args); }
 
   fadeSends { |boardChans ...args|
     var currentType = \mix;

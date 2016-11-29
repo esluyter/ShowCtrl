@@ -1,0 +1,134 @@
+TITLE:: CueList
+summary:: a list of named functions with index pointer
+categories:: Live Show Control
+related:: Classes/ShowCtrlWindow, Classes/CL1
+
+DESCRIPTION::
+Work-in-progress cue list, saved to location on disk and backed up at each save.
+
+
+CLASSMETHODS::
+
+METHOD:: new
+Loads cue list from disk
+
+ARGUMENT:: filepath
+Set the filepath (optional -- defaults to current executing directory)
+
+ARGUMENT:: defaultFunc
+Set the default cue (optional)
+
+
+INSTANCEMETHODS::
+
+PRIVATE:: init
+
+SUBSECTION:: GUI
+
+METHOD:: makeWindow
+Create a LINK::Classes/ShowCtrlWindow:: for this CueList
+
+SUBSECTION:: Moving about
+
+METHOD:: incrementSceneIndex
+Go to next cue (wraps at 0)
+
+METHOD:: decrementSceneIndex
+Go to previous cue (wraps at 0)
+
+METHOD:: gotoSceneName
+Go to cue by name
+
+METHOD:: currentSceneIndex
+Get current index / go to cue by index
+
+SUBSECTION:: Firing a cue
+
+METHOD:: executeCurrentScene
+Execute function at current cue index
+
+
+
+SUBSECTION:: Editing current cue
+
+METHOD:: currentSceneFunc
+Get or replace current cue function
+
+METHOD:: currentSceneName
+Get or update current cue name
+
+
+SUBSECTION:: Next/prev cue info
+
+METHOD:: prevSceneName
+
+METHOD:: nextSceneName
+
+
+SUBSECTION:: Adding and deleting cues
+
+METHOD:: addScene
+Add a cue at specified index with specified name and function
+
+METHOD:: addEmptyScene
+Add a cue at specified index with the default function
+
+METHOD:: addSceneAfterCurrent
+Add empty cue after the current cue
+
+METHOD:: addSceneBeforeCurrent
+Add empty cue before the current cue
+
+METHOD:: deleteScene
+Delete cue at specified index
+
+METHOD:: deleteCurrentScene
+Delete current cue
+
+
+SUBSECTION:: Cue list operations
+
+METHOD:: refreshSceneFuncs
+Reload from disk
+
+METHOD:: sceneFuncs
+Get list of cue functions
+
+METHOD:: sceneNames
+Get list of cue names
+
+METHOD:: lastExecutedScene
+Get last executed cue
+
+
+METHOD:: saveSceneFuncs
+Save cue list to disk, including backup
+
+
+
+METHOD:: filepath
+Get or set the cue list filepath
+
+METHOD:: defaultFunc
+Get or set the default cue function
+
+
+
+
+
+
+
+SUBSECTION:: Unsaved changes
+
+METHOD:: unsavedListChanges
+Whether there are unsaved changes to the cue list
+
+METHOD:: unsavedSceneChanges
+Whether there are unsaved edits to current cue (updated by GUI, so we know whether it's safe to move the cue index pointer)
+
+
+EXAMPLES::
+
+code::
+(some example code)
+::

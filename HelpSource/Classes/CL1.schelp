@@ -1,0 +1,215 @@
+TITLE:: CL1
+summary:: an interface for the Yamaha CL1 console
+categories:: Live Show Control
+related:: Classes/CueList, Classes/ShowCtrlWindow
+
+DESCRIPTION::
+An interface to control the Yamaha CL1 console via MIDI.
+
+A work in progress, this is what is currently implemented:
+
+list::
+## Set / read DCA and update dependents
+## Set / read input channel fader / sends and update dependents
+## Automate input channel fader / sends
+## Programmatically set input channel EQ parameters
+## Load / save EQ from CL1 library
+::
+
+CLASSMETHODS::
+
+PRIVATE:: dbToCc
+PRIVATE:: sysexToDb
+PRIVATE:: initClass
+PRIVATE:: dbToSysex
+PRIVATE:: freqToSysex
+PRIVATE:: sysexToFreq
+PRIVATE:: ccToDb
+
+METHOD:: new
+Initializes board control via specified MIDI device.
+
+ARGUMENT:: deviceName
+MIDI device name
+
+ARGUMENT:: portName
+MIDI port name
+
+ARGUMENT:: midichan
+MIDI channel the board is set to
+
+ARGUMENT:: initread
+Whether to read all fader/send/DCA settings on init.
+
+ARGUMENT:: debug
+Whether to post debug info.
+
+
+INSTANCEMETHODS::
+
+PRIVATE:: dcaIsOn
+PRIVATE:: dcaPositions
+PRIVATE:: faderIsOn
+PRIVATE:: faderPositions
+PRIVATE:: sendIsOn
+PRIVATE:: sendPositions
+
+PRIVATE:: makeMidifuncs
+PRIVATE:: initBoardRead
+PRIVATE:: cmdPeriod
+
+PRIVATE:: paramChange
+
+PRIVATE:: setSendsHelper
+PRIVATE:: setFadersHelper
+PRIVATE:: setDCAsHelper
+PRIVATE:: fadeFadersHelper
+PRIVATE:: fadeSendsHelper
+
+
+INSTANCEMETHODS::
+
+SUBSECTION:: Set faders, sends, and DCAs
+
+METHOD:: setFader
+redirects to setFaders
+
+METHOD:: setFaders
+Sets levels and/or mutes for specified 0-index input channels. (See example below for details.)
+
+DISCUSSION::
+The following code will do the following:
+
+TABLE::
+## Channel 1 || turn on and set to -6db
+## Channel 2 || turn off
+## Channels 3 & 4 || set to -12db
+## Channels 5 - 8 || set alternately to -inf and -6db
+::
+
+CODE::
+c = CL1("USB Uno MIDI Interface", "USB Uno MIDI Interface", initread:false);
+
+(
+c.setFaders(
+  0, [\on, -6],
+  1, \off,
+  [2, 3], -12,
+  (4..7), [-inf, -6]
+);
+)
+::
+
+
+
+METHOD:: setSend
+redirects to setSends
+
+METHOD:: setSends
+Sets levels, pre/post, and/or mutes for specified 0-index mix and matrix sends on the specified input channels. (See example below for details.)
+
+ARGUMENT:: boardChans
+Single 0-index channel number or array of channel numbers
+
+DISCUSSION::
+The following code will set the following sends on channels 1 & 2:
+
+TABLE::
+## Mix 1 || turn on and set to -6db
+## Mix 2 || turn off
+## Mix 3 & 4 || set to -12db pre-fade
+## Matrix 5 - 8 || set alternately to -inf and -6db; set all prefade
+::
+
+CODE::
+c = CL1("USB Uno MIDI Interface", "USB Uno MIDI Interface", initread:false);
+
+(
+c.setSends([0, 1],
+  [\mix, 0], [\on, -6],
+  [\mix, 1], \off,
+  [\mix, 2, 3], -12,
+  [\matrix, (4..7)], [\pre, -inf, -6]
+);
+)
+::
+
+METHOD:: setDCA
+redirects to setDCAs
+
+METHOD:: setDCAs
+Sets levels and/or mutes for specified 0-index DCAs (exactly like setFaders, above).
+
+
+
+SUBSECTION:: Automate faders and sends
+
+METHOD:: fadeFader
+redirects to fadeFaders
+
+METHOD:: fadeFaders
+Fades specified input channel faders to target level over specified amount of time
+
+METHOD:: fadeSend
+redirects to fadeSends
+
+METHOD:: fadeSends
+Fades specified mix/matrix sends on specified input channels to target levels over specified amount of time
+
+ARGUMENT:: boardChans
+Single 0-index channel number or array of channel numbers
+
+
+
+METHOD:: stopAllFades
+Stops all in-progress fades where they are.
+
+
+
+
+SUBSECTION:: Working with EQs
+
+METHOD:: setEQ
+For controlling specific individual paramters of the EQ
+
+ARGUMENT:: boardChan
+0-index input channel
+
+ARGUMENT:: eqSpec
+Specific changes you want to make to the EQ
+
+ARGUMENT:: on
+Turn EQ on or off
+
+DISCUSSION::
+(TODO: make code example)
+
+
+METHOD:: loadEQ
+Loads saved EQ from library
+
+ARGUMENT:: boardChan
+0-index input channel
+
+ARGUMENT:: eqNum
+Library EQ number (1-index, for now)
+
+
+METHOD:: saveEQ
+Save EQ to library
+
+ARGUMENT:: boardChan
+0-index input channel
+
+ARGUMENT:: eqNum
+Library EQ number (1-index, for now)
+
+
+
+SUBSECTION:: MIDI device information
+
+METHOD:: outDevice
+returns:: MIDI out device (a MIDIOut)
+
+METHOD:: uid
+returns:: uid of MIDI device
