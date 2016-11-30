@@ -6,6 +6,8 @@ CL1 {
   var fadeRoutines, fadeSendRoutines;
   var midifuncCc, midifuncSysex;
 
+  var snapshot;
+
   // sysex stuff
   var midichan = 8;
   var groupid = 0x3E; // Digital mixer
@@ -338,6 +340,54 @@ CL1 {
       };
 
       defer { win.close };
+    };
+  }
+
+  saveSnapshot {
+    snapshot = (
+      faderPositions: faderPositions.copy,
+      faderIsOn: faderIsOn.copy,
+      sendPositions: sendPositions.deepCopy,
+      sendIsOn: sendIsOn.deepCopy,
+      dcaPositions: dcaPositions.copy,
+      dcaIsOn: dcaIsOn.copy
+    );
+  }
+
+  restoreSnapshot {
+    if (snapshot.notNil) {
+      this.stopAllFades;
+
+      snapshot.faderPositions.do { |db, boardChan|
+        if (db != faderPositions[boardChan]) {
+          this.setFaders(boardChan, db);
+        };
+      };
+      snapshot.faderIsOn.do { |on, boardChan|
+        if (on != faderIsOn[boardChan]) {
+          this.setFaders(boardChan, if (on) {\on} {\off});
+        }
+      };
+
+      snapshot.sendPositions.do { |sends, boardChan|
+        sends.do { |db, i|
+          var sendType = if (i < 24) {\mix} {\matrix};
+          var sendNum = i % 24;
+          //[boardChan, sendType, sendNum, (db == sendPositions[boardChan][i])].postln;
+          if (db != sendPositions[boardChan][i]) {
+            this.setSends(boardChan.postln, [sendType, sendNum], db);
+          };
+        };
+      };
+      snapshot.sendIsOn.do { |sends, boardChan|
+        sends.do { |on, i|
+          var sendType = if (i < 24) {\mix} {\matrix};
+          var sendNum = i % 24;
+          if (on != sendIsOn[boardChan][i]) {
+            this.setSends(boardChan, [sendType, sendNum], if (on) {\on} {\off});
+          };
+        };
+      };
     };
   }
 
