@@ -4,6 +4,7 @@ CL1 {
   var <faderPositions, <faderIsOn, <sendPositions, <sendIsOn;
   var <dcaPositions, <dcaIsOn;
   var fadeRoutines, fadeSendRoutines;
+  var initRoutine, waitingOn;
   var midifuncCc, midifuncSysex;
 
   var snapshot;
@@ -197,8 +198,17 @@ CL1 {
     }, chan: midichan, srcID: uid);
 
     midifuncSysex = MIDIFunc.sysex({ |data, src|
-      if (src == uid) {
+      if ((src == uid) && (data.size != 18)) {
+        "-----------WTF--------------".postln;
+        data.size.postln;
+        data.collect(_.asHexString).collect(_[6..7]).postcs;
+        "----------END WTF------------".postln;
+        initRoutine.stop;
+      };
+      if ((src == uid) && (data.size == 18)) {
         if (debug) { data.collect(_.asHexString).collect(_[6..7]).postcs };
+
+        if (data[5..11] == waitingOn) { waitingOn = nil };
 
         if (data[0..10] == Int8Array[0xF0, 0x43, 0x18, 0x3E, 0x19, 0x01, 0x00, 0x37, 0x00, 0x00, 0x00]) { // fader position
           var boardChan = data[11];
@@ -287,10 +297,15 @@ CL1 {
   }
 
   initBoardRead {
-    var wait = 0.006;
-    var chanwait = 0.006;
     var statusbar, statusbarwidth, statusbarheight, statustext;
     var win = Window(resizable:false, border:false).front;
+
+    var inquire = { |int8arr|
+      outDevice.sysex(int8arr);
+      waitingOn = int8arr[5..11];
+      while { waitingOn.notNil } { 0.002.wait };
+    };
+
     win.bounds_(win.bounds.insetBy(0, 100));
     statusbarheight = 30;
     statusbarwidth = win.bounds.width - 20;
@@ -302,7 +317,8 @@ CL1 {
     statustext = StaticText(win, Rect(10, win.bounds.height / 2 + (statusbarheight / 2), win.bounds.width - 20, 40))
     .align_(\left)
     .string_("Reading channel 0 of 48....");
-    fork {
+
+    initRoutine = fork {
       var totalchans = 48 + 16; // input channels + DCAs
 
       48.do { |i|
@@ -310,22 +326,16 @@ CL1 {
           statusbar.bounds_(statusbar.bounds.width_((i + 1.0 / totalchans) * statusbarwidth));
           statustext.string_(("Reading input channel " ++ (i + 1) ++ " of 48...."));
         };
-        outDevice.sysex(Int8Array[0xF0, 0x43, 0x38, 0x3E, 0x19, 0x01, 0x00, 0x37, 0x00, 0x00, 0x00, i, 0xF7]);
-        wait.wait;
-        outDevice.sysex(Int8Array[0xF0, 0x43, 0x38, 0x3E, 0x19, 0x01, 0x00, 0x35, 0x00, 0x00, 0x00, i, 0xF7]);
+        inquire.(Int8Array[0xF0, 0x43, 0x38, 0x3E, 0x19, 0x01, 0x00, 0x37, 0x00, 0x00, 0x00, i, 0xF7]);
+        inquire.(Int8Array[0xF0, 0x43, 0x38, 0x3E, 0x19, 0x01, 0x00, 0x35, 0x00, 0x00, 0x00, i, 0xF7]);
         24.do { |j|
-          wait.wait;
-          outDevice.sysex(Int8Array[0xF0, 0x43, 0x38, 0x3E, 0x19, 0x01, 0x00, 0x49, 0x00, j * 3 + 5, 0x00, i, 0xF7]);
-          wait.wait;
-          outDevice.sysex(Int8Array[0xF0, 0x43, 0x38, 0x3E, 0x19, 0x01, 0x00, 0x49, 0x00, j * 3 + 3, 0x00, i, 0xF7]);
+          inquire.(Int8Array[0xF0, 0x43, 0x38, 0x3E, 0x19, 0x01, 0x00, 0x49, 0x00, j * 3 + 5, 0x00, i, 0xF7]);
+          inquire.(Int8Array[0xF0, 0x43, 0x38, 0x3E, 0x19, 0x01, 0x00, 0x49, 0x00, j * 3 + 3, 0x00, i, 0xF7]);
         };
         8.do { |j|
-          wait.wait;
-          outDevice.sysex(Int8Array[0xF0, 0x43, 0x38, 0x3E, 0x19, 0x01, 0x00, 0x4B, 0x00, j * 3 + 5, 0x00, i, 0xF7]);
-          wait.wait;
-          outDevice.sysex(Int8Array[0xF0, 0x43, 0x38, 0x3E, 0x19, 0x01, 0x00, 0x4B, 0x00, j * 3 + 3, 0x00, i, 0xF7]);
+          inquire.(Int8Array[0xF0, 0x43, 0x38, 0x3E, 0x19, 0x01, 0x00, 0x4B, 0x00, j * 3 + 5, 0x00, i, 0xF7]);
+          inquire.(Int8Array[0xF0, 0x43, 0x38, 0x3E, 0x19, 0x01, 0x00, 0x4B, 0x00, j * 3 + 3, 0x00, i, 0xF7]);
         };
-        chanwait.wait;
       };
 
       16.do { |i|
@@ -333,10 +343,8 @@ CL1 {
           statusbar.bounds_(statusbar.bounds.width_((i + 49.0 / totalchans) * statusbarwidth));
           statustext.string_(("Reading DCA " ++ (i + 1) ++ " of 16...."));
         };
-        outDevice.sysex(Int8Array[0xF0, 0x43, 0x38, 0x3E, 0x19, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, i, 0xF7]);
-        wait.wait;
-        outDevice.sysex(Int8Array[0xF0, 0x43, 0x38, 0x3E, 0x19, 0x01, 0x00, 0x7E, 0x00, 0x00, 0x00, i, 0xF7]);
-        wait.wait;
+        inquire.(Int8Array[0xF0, 0x43, 0x38, 0x3E, 0x19, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, i, 0xF7]);
+        inquire.(Int8Array[0xF0, 0x43, 0x38, 0x3E, 0x19, 0x01, 0x00, 0x7E, 0x00, 0x00, 0x00, i, 0xF7]);
       };
 
       defer { win.close };
@@ -386,6 +394,17 @@ CL1 {
           if (on != sendIsOn[boardChan][i]) {
             this.setSends(boardChan, [sendType, sendNum], if (on) {\on} {\off});
           };
+        };
+      };
+
+      snapshot.dcaPositions.do { |db, boardChan|
+        if (db != dcaPositions[boardChan]) {
+          this.setDCAs(boardChan, db);
+        };
+      };
+      snapshot.dcaIsOn.do { |on, boardChan|
+        if (on != dcaIsOn[boardChan]) {
+          this.setDCAs(boardChan, if (on) {\on} {\off});
         };
       };
     };

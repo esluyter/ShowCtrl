@@ -16,6 +16,12 @@ list::
 ## Load / save EQ from CL1 library
 ::
 
+SUBSECTION:: TODO
+
+list::
+## keep track of send pre/post as well as position and on/off (for snapshot)
+::
+
 CLASSMETHODS::
 
 PRIVATE:: dbToCc

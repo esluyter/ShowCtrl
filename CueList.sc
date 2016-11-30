@@ -7,6 +7,8 @@ CueList {
   var <unsavedListChanges = false;
   var <defaultfilepath;
 
+  var <>preExecuteHook, <>postExecuteHook;
+
   *new { |filepath, defaultFunc|
     ^super.new.init(filepath, defaultFunc);
   }
@@ -39,7 +41,10 @@ Page #:
     var func = this.currentSceneFunc();
     lastExecutedScene = this.currentSceneName();
     this.incrementSceneIndex();
+
+    preExecuteHook.value;
     func.value;
+    postExecuteHook.value;
   }
 
   incrementSceneIndex {
