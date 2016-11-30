@@ -128,6 +128,9 @@ ShowCtrlView : SCViewHolder {
         this.saveScene;
         this.saveSceneFuncs;
       };
+      if (key == 31) { // o
+        this.openSceneFuncs;
+      };
       if (key == 2) { // d
         HelpBrowser.openHelpFor(view.selectedString);
       };
@@ -294,7 +297,7 @@ ShowCtrlView : SCViewHolder {
     };
   }
 
-  saveSceneFuncs {
+  saveSceneFuncs { |action|
     if (showCtrl.saveSceneFuncs.not) {
       FileDialog({ |path|
         path = path.asPathName;
@@ -314,6 +317,7 @@ ShowCtrlView : SCViewHolder {
                   } {
                     showCtrl.filepath = path;
                     showCtrl.saveSceneFuncs;
+                    { action.value }.defer(0.2);
                   }
                 }, false);
               };
@@ -321,6 +325,25 @@ ShowCtrlView : SCViewHolder {
           };
         }, false);
       }, fileMode: 0, acceptMode: 1, stripResult: true);
+    };
+  }
+
+  openSceneFuncs {
+    if (showCtrl.unsavedListChanges || showCtrl.unsavedSceneChanges) {
+      this.confirmBox("Save first?", {
+        {
+          this.saveScene;
+          this.saveSceneFuncs {
+            this.openSceneFuncs
+          };
+        }.defer(0.2);
+      });
+    } {
+      FileDialog({ |path|
+        showCtrl.filepath = path;
+        showCtrl.refreshSceneFuncs;
+        showCtrl.currentSceneIndex = 0;
+      }, fileMode: 2, acceptMode: 0, stripResult: true);
     };
   }
 
