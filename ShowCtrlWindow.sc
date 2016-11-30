@@ -1,7 +1,8 @@
 ShowCtrlView : SCViewHolder {
   var <showCtrl;
-  var gui, <leftPanelWidth, bottomPanelHeight = 50, margin = 5, buttonWidth = 75;
+  var <gui, <leftPanelWidth, bottomPanelHeight = 50, margin = 5, buttonWidth = 75;
   var dragStart;
+  var savedSelection;
 
   *new { |parent, bounds|
     ^super.new.init(parent, bounds);
@@ -36,7 +37,8 @@ ShowCtrlView : SCViewHolder {
       .font_(Font("Input Sans", 10))
       .background_(Color(0.18, 0.21, 0.25))
       .stringColor_(Color.white)
-      .resize_(5),
+      .resize_(5)
+      .enterInterpretsSelection_(true),
 
       resizePanel: View(view, Rect(leftPanelWidth - margin, margin, margin, bounds.height - bottomPanelHeight - (2*margin)))
       .background_(Color.gray(0, 0))
@@ -117,14 +119,14 @@ ShowCtrlView : SCViewHolder {
         this.saveScene;
       };
       if (key == 13) { // w
-        showCtrl.saveSceneFuncs;
+        this.saveSceneFuncs;
       };
     };
 
     if (mod.isCmd) {
       if (key == 1) { // s
         this.saveScene;
-        showCtrl.saveSceneFuncs;
+        this.saveSceneFuncs;
       };
       if (key == 2) { // d
         HelpBrowser.openHelpFor(view.selectedString);
@@ -158,7 +160,7 @@ ShowCtrlView : SCViewHolder {
   makeInteraction {
     var buttons = gui[\bottomPanel];
     buttons[\updateButt].action_({ this.saveScene });
-    buttons[\saveButt].action_({ showCtrl.saveSceneFuncs });
+    buttons[\saveButt].action_({ this.saveSceneFuncs });
     buttons[\renameButt].action_({ this.renameScene });
     buttons[\deleteButt].action_({ this.deleteScene });
     buttons[\moveUpButt].action_({ this.moveSceneUp });
@@ -180,6 +182,13 @@ ShowCtrlView : SCViewHolder {
       //[chr.asCompileString, mod, uni, key].postln;
       //if (/*(key == 36) || */(key == 41)) { this.colorizeText; }; // return or ;
       if (mod.isAlt || mod.isCtrl || mod.isCmd) { this.handleKey(view, chr, mod, uni, key) };
+      if ((key == 36) && mod.isCmd && (view.selectionSize == 0)) { // cmd-enter
+        savedSelection = [view.selectionStart, view.selectionSize];
+        view.select(0, view.string.size);
+        { view.select(*savedSelection) }.defer(0.1);
+        ("-> " ++ view.string.interpret).postln;
+        true; // don't do c++ evaluation
+      };
     })
     .keyUpAction_({ |view, chr, mod, uni, key|
       var beginningOfPrevLine, prevLine, indent;
@@ -282,6 +291,36 @@ ShowCtrlView : SCViewHolder {
       gui[\topBlackPanel].background_(Color.green);
       AppClock.sched(0.2, { gui[\topBlackPanel].background_(Color.black); nil });
       showCtrl.currentSceneFunc_(func);
+    };
+  }
+
+  saveSceneFuncs {
+    if (showCtrl.saveSceneFuncs.not) {
+      FileDialog({ |path|
+        path = path.asPathName;
+        path = path.pathOnly +/+ path.fileNameWithoutExtension;
+        ("rm -r " ++ path.copy.replace(" ", "\\ ")).unixCmd({ |exitcode|
+          if (exitcode != 0) {
+            { this.saveSceneFuncs }.defer(0.2);
+          } {
+            ("mkdir " ++ path.copy.replace(" ", "\\ ")).unixCmd({ |exitcode|
+              if (exitcode != 0) {
+                { this.saveSceneFuncs }.defer(0.2);
+              } {
+                ("cp -r " ++ showCtrl.defaultfilepath.copy.replace(" ", "\\ ") +/+ "* " ++ path.copy.replace(" ", "\\ ")).unixCmd({ |exitcode|
+                  if (exitcode != 0) {
+                    this.confirmBox("There was an error");
+                    //{ this.saveSceneFuncs }.defer(0.2);
+                  } {
+                    showCtrl.filepath = path;
+                    showCtrl.saveSceneFuncs;
+                  }
+                }, false);
+              };
+            }, false);
+          };
+        }, false);
+      }, fileMode: 0, acceptMode: 1, stripResult: true);
     };
   }
 
@@ -497,6 +536,9 @@ ShowCtrlView : SCViewHolder {
         this.colorizeText(true);
         gui[\textBox].select((gui[\textBox].string.find("*/") ?? -3) + 3, 0);
       };
+
+      gui[\textBox].enterInterpretsSelection_(true);
+
       gui[\sceneList].selection_([showCtrl.currentSceneIndex]);
       gui[\sceneList].selection_([showCtrl.currentSceneIndex]);
     }
@@ -526,9 +568,15 @@ ShowCtrlWindow : SCViewHolder {
 
   cueList_ { |cueList|
     view.showCtrl_(cueList);
+    view.showCtrl.addDependant(this);
   }
 
   cueList {
     ^view.showCtrl;
+  }
+
+  update { |obj, what|
+    switch (what)
+    {\filepath} { win.name_(view.showCtrl.filepath) };
   }
 }

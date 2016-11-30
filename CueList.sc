@@ -1,17 +1,19 @@
 CueList {
-  var <>filepath, <sceneFuncs;
+  var <filepath, <sceneFuncs;
   var <>defaultFunc;
   var <currentSceneIndex = 0;
   var <lastExecutedScene = '';
   var <unsavedSceneChanges = false;
   var <unsavedListChanges = false;
+  var <defaultfilepath;
 
   *new { |filepath, defaultFunc|
     ^super.new.init(filepath, defaultFunc);
   }
 
   init { |argfilepath, argdeffunc|
-    filepath = argfilepath ?? thisProcess.nowExecutingPath.dirname;
+    defaultfilepath = "defaultCue".resolveRelative;
+    filepath = argfilepath ?? defaultfilepath;//thisProcess.nowExecutingPath.dirname;
 
     defaultFunc = argdeffunc ? {/*
 
@@ -85,14 +87,21 @@ Page #:
   saveSceneFuncs {
     var backupfilepath = filepath +/+ "backups" +/+ "cue-data" ++
     Date.localtime.format("__%Y-%m-%d__%H.%M.%S__") ++ ".scd";
+
+    if (filepath == defaultfilepath) {
+      "Can't overwrite default cuelist".postln;
+      ^false;
+    };
+
     ("mv \"" ++ filepath +/+ "cue-data.scd\" \"" ++ backupfilepath ++ "\"").unixCmd( {
       var f = File(filepath  +/+ "cue-data.scd", "w");
       f.write(sceneFuncs.asCompileString);
       f.close;
-    });
+    }, false);
     unsavedListChanges = false;
     unsavedSceneChanges = false;
     this.changed(\unsavedChanges);
+    ^true;
   }
 
   unsavedSceneChanges_ { |unsaved|
@@ -149,5 +158,10 @@ Page #:
   makeWindow { |bounds|
     bounds = bounds ?? Window.screenBounds.width_(800);
     ^ShowCtrlWindow(filepath, bounds).cueList_(this);
+  }
+
+  filepath_ { |newfilepath|
+    filepath = newfilepath;
+    this.changed(\filepath);
   }
 }
