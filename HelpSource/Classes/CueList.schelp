@@ -102,9 +102,13 @@ Get last executed cue
 
 
 METHOD:: saveSceneFuncs
-Save cue list to disk, including backup
+Save cue list to disk, including backup. Will not overwrite default cuelist, instead will return false.
 
 
+SUBSECTION:: File path and defaults
+
+METHOD:: defaultfilepath
+Location of default cue list (read only)
 
 METHOD:: filepath
 Get or set the cue list filepath

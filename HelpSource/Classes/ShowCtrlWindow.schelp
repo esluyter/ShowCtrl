@@ -21,10 +21,11 @@ Window bounds
 
 INSTANCEMETHODS::
 
+PRIVATE:: init
+PRIVATE:: update
+
 METHOD:: cueList
 Set LINK::Classes/CueList:: to interface with
-
-PRIVATE:: init
 
 METHOD:: win
 The LINK::Classes/Window::
