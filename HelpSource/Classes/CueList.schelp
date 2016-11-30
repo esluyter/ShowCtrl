@@ -102,9 +102,13 @@ Get last executed cue
 
 
 METHOD:: saveSceneFuncs
-Save cue list to disk, including backup
+Save cue list to disk, including backup. Will not overwrite default cuelist, instead will return false.
 
 
+SUBSECTION:: File path and defaults
+
+METHOD:: defaultfilepath
+Location of default cue list (read only)
 
 METHOD:: filepath
 Get or set the cue list filepath
@@ -130,5 +134,8 @@ Whether there are unsaved edits to current cue (updated by GUI, so we know wheth
 EXAMPLES::
 
 code::
-(some example code)
+(
+c = CueList();
+w = c.makeWindow;
+)
 ::
