@@ -134,5 +134,8 @@ Whether there are unsaved edits to current cue (updated by GUI, so we know wheth
 EXAMPLES::
 
 code::
-(some example code)
+(
+c = CueList();
+w = c.makeWindow;
+)
 ::

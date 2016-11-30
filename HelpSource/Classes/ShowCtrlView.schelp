@@ -105,5 +105,8 @@ METHOD:: dialogBox
 EXAMPLES::
 
 code::
-(some example code)
+(
+c = CueList();
+w = c.makeWindow;
+)
 ::
