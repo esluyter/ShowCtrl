@@ -1,7 +1,7 @@
 TITLE:: CueList
 summary:: a list of named functions with index pointer
 categories:: Live Show Control
-related:: Classes/ShowCtrlWindow, Classes/CL1
+related:: Classes/CueListWindow, Classes/CL1
 
 DESCRIPTION::
 Work-in-progress cue list, saved to location on disk and backed up at each save.
@@ -26,82 +26,98 @@ PRIVATE:: init
 SUBSECTION:: GUI
 
 METHOD:: makeWindow
-Create a LINK::Classes/ShowCtrlWindow:: for this CueList
+Create a LINK::Classes/CueListWindow:: for this CueList
+
+SUBSECTION:: Custom behavior
+
+METHOD:: preExecuteHook
+A LINK::Classes/Function:: to be called directly before executing a cue.
+
+Arguments passed to function: STRONG::cueList, index, name, func::
+
+METHOD:: postExecuteHook
+A LINK::Classes/Function:: to be called directly after executing a cue.
+
+Arguments passed to function: STRONG::cueList, index, name, func::
 
 SUBSECTION:: Moving about
 
-METHOD:: incrementSceneIndex
+METHOD:: incrementCueIndex
 Go to next cue (wraps at 0)
 
-METHOD:: decrementSceneIndex
+METHOD:: decrementCueIndex
 Go to previous cue (wraps at 0)
 
-METHOD:: gotoSceneName
+METHOD:: gotoCueName
 Go to cue by name
 
-METHOD:: currentSceneIndex
+METHOD:: currentCueIndex
 Get current index / go to cue by index
 
 SUBSECTION:: Firing a cue
 
-METHOD:: executeCurrentScene
+METHOD:: executeCurrentCue
 Execute function at current cue index
 
 
 
 SUBSECTION:: Editing current cue
 
-METHOD:: currentSceneFunc
+METHOD:: currentCueFunc
 Get or replace current cue function
 
-METHOD:: currentSceneName
+METHOD:: currentCueName
 Get or update current cue name
+
+METHOD:: moveCurrentCueUp
+
+METHOD:: moveCurrentCueDown
 
 
 SUBSECTION:: Next/prev cue info
 
-METHOD:: prevSceneName
+METHOD:: prevCueName
 
-METHOD:: nextSceneName
+METHOD:: nextCueName
 
 
 SUBSECTION:: Adding and deleting cues
 
-METHOD:: addScene
+METHOD:: addCue
 Add a cue at specified index with specified name and function
 
-METHOD:: addEmptyScene
+METHOD:: addEmptyCue
 Add a cue at specified index with the default function
 
-METHOD:: addSceneAfterCurrent
+METHOD:: addCueAfterCurrent
 Add empty cue after the current cue
 
-METHOD:: addSceneBeforeCurrent
+METHOD:: addCueBeforeCurrent
 Add empty cue before the current cue
 
-METHOD:: deleteScene
+METHOD:: deleteCue
 Delete cue at specified index
 
-METHOD:: deleteCurrentScene
+METHOD:: deleteCurrentCue
 Delete current cue
 
 
 SUBSECTION:: Cue list operations
 
-METHOD:: refreshSceneFuncs
+METHOD:: refreshCueFuncs
 Reload from disk
 
-METHOD:: sceneFuncs
+METHOD:: cueFuncs
 Get list of cue functions
 
-METHOD:: sceneNames
+METHOD:: cueNames
 Get list of cue names
 
-METHOD:: lastExecutedScene
+METHOD:: lastExecutedCue
 Get last executed cue
 
 
-METHOD:: saveSceneFuncs
+METHOD:: saveCueFuncs
 Save cue list to disk, including backup. Will not overwrite default cuelist, instead will return false.
 
 
@@ -127,7 +143,7 @@ SUBSECTION:: Unsaved changes
 METHOD:: unsavedListChanges
 Whether there are unsaved changes to the cue list
 
-METHOD:: unsavedSceneChanges
+METHOD:: unsavedCueChanges
 Whether there are unsaved edits to current cue (updated by GUI, so we know whether it's safe to move the cue index pointer)
 
 

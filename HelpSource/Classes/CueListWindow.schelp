@@ -1,0 +1,44 @@
+TITLE:: CueListWindow
+summary:: a window to hold a CueListView
+categories:: Live Show Control
+related:: Classes/CueList, Classes/CueListView
+
+DESCRIPTION::
+Work-in-progress, a window to interface with a LINK::Classes/CueList::
+
+
+CLASSMETHODS::
+
+METHOD:: new
+
+ARGUMENT:: name
+Window name
+
+ARGUMENT:: bounds
+Window bounds
+
+
+
+INSTANCEMETHODS::
+
+PRIVATE:: init
+PRIVATE:: update
+
+METHOD:: cueList
+Set LINK::Classes/CueList:: to interface with
+
+METHOD:: win
+The LINK::Classes/Window::
+
+METHOD:: view
+The LINK::Classes/CueListView::
+
+
+EXAMPLES::
+
+code::
+(
+c = CueList();
+w = c.makeWindow;
+)
+::

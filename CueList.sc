@@ -1,9 +1,9 @@
 CueList {
-  var <filepath, <sceneFuncs;
+  var <filepath, <cueFuncs;
   var <>defaultFunc;
-  var <currentSceneIndex = 0;
-  var <lastExecutedScene = '';
-  var <unsavedSceneChanges = false;
+  var <currentCueIndex = 0;
+  var <lastExecutedCue = '';
+  var <unsavedCueChanges = false;
   var <unsavedListChanges = false;
   var <defaultfilepath;
 
@@ -26,70 +26,72 @@ Page #:
 
 };
 
-    this.refreshSceneFuncs;
+    this.refreshCueFuncs;
   }
 
-  refreshSceneFuncs {
-    sceneFuncs = File(filepath +/+ "cue-data.scd", "r").readAllString.interpret;
-    unsavedSceneChanges = false;
+  refreshCueFuncs {
+    cueFuncs = File(filepath +/+ "cue-data.scd", "r").readAllString.interpret;
+    unsavedCueChanges = false;
     unsavedListChanges = false;
-    this.changed(\sceneFuncs);
+    this.changed(\cueFuncs);
     this.changed(\unsavedChanges);
   }
 
-  executeCurrentScene {
-    var func = this.currentSceneFunc();
-    lastExecutedScene = this.currentSceneName();
-    this.incrementSceneIndex();
+  executeCurrentCue {
+    var func = this.currentCueFunc;
+    var name = this.currentCueName;
+    var index = this.currentCueIndex;
+    lastExecutedCue = this.currentCueName();
+    this.incrementCueIndex();
 
-    preExecuteHook.value;
+    preExecuteHook.value(this, index, name, func);
     func.value;
-    postExecuteHook.value;
+    postExecuteHook.value(this, index, name, func);
   }
 
-  incrementSceneIndex {
-    this.currentSceneIndex_(currentSceneIndex + 1);
+  incrementCueIndex {
+    this.currentCueIndex_(currentCueIndex + 1);
   }
 
-  decrementSceneIndex {
-    this.currentSceneIndex_(currentSceneIndex - 1);
+  decrementCueIndex {
+    this.currentCueIndex_(currentCueIndex - 1);
   }
 
-  currentSceneIndex_ { |newindex|
-    currentSceneIndex = newindex % sceneFuncs.size;
-    unsavedSceneChanges = false;
-    this.changed(\currentSceneIndex);
+  currentCueIndex_ { |newindex|
+    currentCueIndex = newindex % cueFuncs.size;
+    unsavedCueChanges = false;
+    this.changed(\currentCueIndex);
   }
 
-  currentSceneName {
-    ^sceneFuncs[currentSceneIndex][\name];
+  currentCueName {
+    ^cueFuncs[currentCueIndex][\name];
   }
 
-  currentSceneFunc {
-    ^sceneFuncs[currentSceneIndex][\func];
+  currentCueFunc {
+    ^cueFuncs[currentCueIndex][\func];
   }
 
-  nextSceneName {
-    ^sceneFuncs[currentSceneIndex + 1 % sceneFuncs.size][\name];
+  nextCueName {
+    ^cueFuncs[currentCueIndex + 1 % cueFuncs.size][\name];
   }
 
-  prevSceneName {
-    ^sceneFuncs[currentSceneIndex - 1 % sceneFuncs.size][\name];
+  prevCueName {
+    ^cueFuncs[currentCueIndex - 1 % cueFuncs.size][\name];
   }
 
-  gotoSceneName { |name|
-    sceneFuncs.do { |scene, i|
-      if (scene[\name] == name) {
-        this.currentSceneIndex_(i);
+  gotoCueName { |name|
+    cueFuncs.do { |cue, i|
+      if (cue[\name] == name) {
+        this.currentCueIndex_(i);
       };
     };
   }
 
-  sceneNames {
-    ^sceneFuncs.collect(_[\name]);
+  cueNames {
+    ^cueFuncs.collect(_[\name]);
   }
 
-  saveSceneFuncs {
+  saveCueFuncs {
     var backupfilepath = filepath +/+ "backups" +/+ "cue-data" ++
     Date.localtime.format("__%Y-%m-%d__%H.%M.%S__") ++ ".scd";
 
@@ -100,69 +102,89 @@ Page #:
 
     ("mv \"" ++ filepath +/+ "cue-data.scd\" \"" ++ backupfilepath ++ "\"").unixCmd( {
       var f = File(filepath  +/+ "cue-data.scd", "w");
-      f.write(sceneFuncs.asCompileString);
+      f.write(cueFuncs.asCompileString);
       f.close;
     }, false);
     unsavedListChanges = false;
-    unsavedSceneChanges = false;
+    unsavedCueChanges = false;
     this.changed(\unsavedChanges);
     ^true;
   }
 
-  unsavedSceneChanges_ { |unsaved|
-    unsavedSceneChanges = unsaved;
+  unsavedCueChanges_ { |unsaved|
+    unsavedCueChanges = unsaved;
     this.changed(\unsavedChanges);
   }
 
-  currentSceneFunc_ { |func|
-    sceneFuncs[currentSceneIndex][\func] = func;
-    unsavedSceneChanges = false;
+  currentCueFunc_ { |func|
+    cueFuncs[currentCueIndex][\func] = func;
+    unsavedCueChanges = false;
     unsavedListChanges = true;
     this.changed(\unsavedChanges);
   }
 
-  currentSceneName_ { |name|
-    if (name != sceneFuncs[currentSceneIndex][\name]) { unsavedListChanges = true };
-    sceneFuncs[currentSceneIndex][\name] = name;
-    this.changed(\sceneFuncs);
+  currentCueName_ { |name|
+    if (name != cueFuncs[currentCueIndex][\name]) { unsavedListChanges = true };
+    cueFuncs[currentCueIndex][\name] = name;
+    this.changed(\cueFuncs);
     this.changed(\unsavedChanges);
   }
 
-  addSceneAfterCurrent { |name|
-    this.addEmptyScene(currentSceneIndex + 1, name);
+  moveCurrentCueUp {
+    var index = currentCueIndex;
+    var newIndex = if (index == 0) { 0 } { index - 1 };
+    var func = this.currentCueFunc;
+    var name = this.currentCueName;
+    this.deleteCurrentCue;
+    this.addCue(newIndex, name, func);
+    this.currentCueIndex_(newIndex);
   }
 
-  addSceneBeforeCurrent { |name|
-    this.addEmptyScene(currentSceneIndex, name);
+  moveCurrentCueDown {
+    var index = currentCueIndex;
+    var newIndex = if (index == (cueFuncs.size - 1)) { index } { index + 1 };
+    var func = this.currentCueFunc;
+    var name = this.currentCueName;
+    this.deleteCurrentCue;
+    this.addCue(newIndex, name, func);
+    this.currentCueIndex_(newIndex);
   }
 
-  addEmptyScene { |index, name|
-    this.addScene(index, name, defaultFunc);
+  addCueAfterCurrent { |name|
+    this.addEmptyCue(currentCueIndex + 1, name);
   }
 
-  addScene { |index, name, func|
-    sceneFuncs = sceneFuncs.insert(index, (name: name, func: func));
+  addCueBeforeCurrent { |name|
+    this.addEmptyCue(currentCueIndex, name);
+  }
+
+  addEmptyCue { |index, name|
+    this.addCue(index, name, defaultFunc);
+  }
+
+  addCue { |index, name, func|
+    cueFuncs = cueFuncs.insert(index, (name: name, func: func));
     unsavedListChanges = true;
-    this.changed(\sceneFuncs);
+    this.changed(\cueFuncs);
     this.changed(\unsavedChanges);
-    this.changed(\currentSceneIndex);
+    this.changed(\currentCueIndex);
   }
 
-  deleteCurrentScene {
-    this.deleteScene(currentSceneIndex);
+  deleteCurrentCue {
+    this.deleteCue(currentCueIndex);
   }
 
-  deleteScene { |index|
-    sceneFuncs.removeAt(index);
+  deleteCue { |index|
+    cueFuncs.removeAt(index);
     unsavedListChanges = true;
-    this.changed(\sceneFuncs);
+    this.changed(\cueFuncs);
     this.changed(\unsavedChanges);
-    this.changed(\currentSceneIndex);
+    this.changed(\currentCueIndex);
   }
 
   makeWindow { |bounds|
     bounds = bounds ?? Window.screenBounds.width_(800);
-    ^ShowCtrlWindow(filepath, bounds).cueList_(this);
+    ^CueListWindow(filepath, bounds).cueList_(this);
   }
 
   filepath_ { |newfilepath|
