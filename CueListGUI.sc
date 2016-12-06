@@ -1,5 +1,6 @@
 CueListView : SCViewHolder {
   var <cueList;
+  var <font;
   var <gui, <leftPanelWidth, bottomPanelHeight = 50, margin = 5, buttonWidth = 75;
   var dragStart;
   var savedSelection;
@@ -21,14 +22,12 @@ CueListView : SCViewHolder {
 
       curCue: StaticText(view, Rect(leftPanelWidth + margin, margin, bounds.width - leftPanelWidth - (3*margin), 45))
       .string_("Current cue")
-      .font_(Font("Input Sans", 20))
       .stringColor_(Color.white)
       .resize_(2),
 
       cueList: ListView(view, Rect(margin, margin, leftPanelWidth - (2*margin), bounds.height - bottomPanelHeight - (2*margin)))
       .background_(Color(0.18, 0.21, 0.25))
       .stringColor_(Color.gray(0.65))
-      .font_(Font("Input Sans", 10))
       .resize_(4),
 
       textBox: CodeView(view, Rect(leftPanelWidth, 35 + (4*margin), bounds.width - leftPanelWidth - margin, bounds.height - 35 - bottomPanelHeight - (5*margin)))
@@ -43,7 +42,6 @@ CueListView : SCViewHolder {
         page: Color(0.4, 0.7, 0.5),
         remember: Color(1, 1, 0.7)
       ))
-      .font_(Font("Input Sans", 10))
       .resize_(5),
 
       resizePanel: View(view, Rect(leftPanelWidth - margin, margin, margin, bounds.height - bottomPanelHeight - (2*margin)))
@@ -100,6 +98,8 @@ CueListView : SCViewHolder {
         .resize_(7)
       )
     );
+
+    this.font_(Font("Input Sans", 12));
 
     gui[\bottomPanel].keysValuesDo { |k, v| v.font_(Font.sansSerif(12)) };
     this.makeInteraction;
@@ -198,7 +198,7 @@ CueListView : SCViewHolder {
     });
   }
 
-  confirmBox { |header, action|
+  confirmBox { |header, action, cancelString = "Cancel", cancelAction|
     var button;
     var win = Window(header, Rect(Window.screenBounds.width - 450, Window.screenBounds.height - 300, 400, 100)).front;
     StaticText(win, Rect(10, 10, 380, 40))
@@ -215,8 +215,8 @@ CueListView : SCViewHolder {
         win.close;
       };
     });
-    Button(win, Rect(205, 60, 185, 30)).states_([["Cancel"]])
-    .action_({ win.close });
+    Button(win, Rect(205, 60, 185, 30)).states_([[cancelString]])
+    .action_({ cancelAction.value; win.close });
   }
 
   dialogBox { |header, action, value=""|
@@ -309,6 +309,14 @@ CueListView : SCViewHolder {
   }
 
   openCueFuncs {
+    var openFile = {
+      FileDialog({ |path|
+        cueList.filepath = path;
+        cueList.refreshCueFuncs;
+        cueList.currentCueIndex = 0;
+      }, fileMode: 2, acceptMode: 0, stripResult: true);
+    };
+
     if (cueList.unsavedListChanges || cueList.unsavedCueChanges) {
       this.confirmBox("Save first?", {
         {
@@ -317,13 +325,11 @@ CueListView : SCViewHolder {
             this.openCueFuncs
           };
         }.defer(0.2);
+      }, "Don't save", {
+        openFile.();
       });
     } {
-      FileDialog({ |path|
-        cueList.filepath = path;
-        cueList.refreshCueFuncs;
-        cueList.currentCueIndex = 0;
-      }, fileMode: 2, acceptMode: 0, stripResult: true);
+      openFile.();
     };
   }
 
@@ -358,6 +364,13 @@ CueListView : SCViewHolder {
     this.refresh;
   }
 
+  font_ { |afont|
+    font = afont.size_(afont.size ?? 12);
+
+    gui[\textBox].font_(font);
+    gui[\cueList].font_(font.copy.size_(font.size * 1.2.reciprocal));
+    gui[\curCue].font_(font.copy.size_(20));
+  }
 
   refresh {
     this.updateCues;
