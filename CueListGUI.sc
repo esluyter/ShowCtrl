@@ -389,21 +389,12 @@ CueListView : SCViewHolder {
     };
   }
 
-  updateCurrentCue { |preserveCursor=false|
+  updateCurrentCue {
     defer {
-      var selectionStart = gui[\textBox].selectionStart;
-      var selectionSize = gui[\textBox].selectionSize;
-
       gui[\curCue].string_(cueList.currentCueName);
 
-      if (preserveCursor) {
-        //gui[\textBox].select(selectionStart, selectionSize);
-      } {
-        gui[\textBox].string_(cueList.currentCueFunc.def.sourceCode.findRegexp("^\\{[\\n\\s]*(.*)\\}$")[1][1]);
-        gui[\textBox].select((gui[\textBox].string.find("*/") ?? -3) + 3, 0);
-      };
-
-      gui[\textBox].enterInterpretsSelection_(true);
+      gui[\textBox].string_(cueList.currentCueFunc.def.sourceCode.findRegexp("^\\{[\\n\\s]*(.*)\\}$")[1][1]);
+      gui[\textBox].select((gui[\textBox].string.find("*/") ?? -3) + 3, 0);
 
       gui[\cueList].selection_([cueList.currentCueIndex]);
       gui[\cueList].selection_([cueList.currentCueIndex]);
