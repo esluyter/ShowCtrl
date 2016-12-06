@@ -1,8 +1,12 @@
-[ ( 'name': "Init", 'func': {/* INIT STUFF
+[ ( 'name': "Init", 'func': {/*
+
+Init stuff
 
 */
 
-} ), ( 'name': "--", 'func': {} ), ( 'name': "Ableton TOC", 'func': {/* ABLETON TABLE OF CONTENTS
+} ), ( 'name': "--", 'func': {} ), ( 'name': "Ableton TOC", 'func': {/*
+
+Ableton table of contents
 
 */
 
