@@ -424,7 +424,7 @@ CueListView : SCViewHolder {
 
 
 CueListWindow : SCViewHolder {
-  var <win;
+  var <win, <isFront = false, <>toFrontAction, <>endFrontAction, <completeWindow;
 
   *new { |name="", bounds|
     ^super.new.init(name, bounds);
@@ -432,8 +432,35 @@ CueListWindow : SCViewHolder {
 
   init { |name, bounds|
     win = Window(name, bounds).front
-    .acceptsMouseOver_(true);
+    .acceptsMouseOver_(true)
+    .toFrontAction_({
+      toFrontAction.();
+      if (completeWindow.notNil) {
+        completeWindow.visible = true;
+      };
+      isFront = true;
+    })
+    .endFrontAction_({
+      endFrontAction.();
+      if (completeWindow.notNil) {
+        if (completeWindow.isFront.not) { completeWindow.visible = false };
+      };
+      isFront = false;
+    });
     view = CueListView(win.view).resize_(5);
+  }
+
+  makeCompleteWindow {
+    var bounds, cueListWindow = this;
+
+    bounds = Rect(win.bounds.width - 100, 74, 500, 300);
+    if (completeWindow.notNil) { completeWindow.close };
+
+    completeWindow = view.gui[\textBox].makeCompleteWindow(bounds, win);
+
+    completeWindow.endFrontAction = {
+      if (cueListWindow.isFront.not) { cueListWindow.completeWindow.visible = false };
+    };
   }
 
   cueList_ { |cueList|
