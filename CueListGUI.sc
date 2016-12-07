@@ -472,6 +472,14 @@ CueListWindow : SCViewHolder {
     ^view.cueList;
   }
 
+  font {
+    ^view.font;
+  }
+
+  font_ { |afont|
+    view.font_(afont);
+  }
+
   update { |obj, what|
     switch (what)
     {\filepath} { win.name_(view.cueList.filepath) };
