@@ -1,9 +1,8 @@
 CueListView : SCViewHolder {
   var <cueList;
-  var <font;
-  var <gui, <leftPanelWidth, bottomPanelHeight = 50, <margin = 5, buttonWidth = 75;
-  var dragStart;
-  var savedSelection;
+  var <font, <gui, <leftPanelWidth, bottomPanelHeight = 50, <margin = 5, buttonWidth = 75;
+  var dragStart, savedSelection;
+  var <>parentWindow;
 
   *new { |parent, bounds|
     ^super.new.init(parent, bounds);
@@ -205,7 +204,18 @@ CueListView : SCViewHolder {
 
   confirmBox { |header, action, cancelString = "Cancel", cancelAction|
     var button;
-    var win = Window(header, Rect(Window.screenBounds.width - 450, Window.screenBounds.height - 300, 400, 100)).front;
+    var bounds = if (parentWindow.notNil) {
+      Rect(
+        parentWindow.bounds.left + (parentWindow.bounds.width / 2) - 200,
+        parentWindow.bounds.top + (parentWindow.bounds.height / 3 * 2) - 50,
+        400, 100);
+    } {
+      Rect(
+        Window.screenBounds.width - 450,
+        Window.screenBounds.height - 300,
+        400, 100);
+    };
+    var win = Window(header, bounds).front;
     StaticText(win, Rect(10, 10, 380, 40))
     .string_(header)
     .font_(Font("Helvetica", 30));
@@ -226,7 +236,18 @@ CueListView : SCViewHolder {
 
   dialogBox { |header, action, value=""|
     var field, button;
-    var win = Window(header, Rect(Window.screenBounds.width - 450, Window.screenBounds.height - 300, 400, 130)).front;
+    var bounds = if (parentWindow.notNil) {
+      Rect(
+        parentWindow.bounds.left + (parentWindow.bounds.width / 2) - 200,
+        parentWindow.bounds.top + (parentWindow.bounds.height / 3 * 2) - 65,
+        400, 130);
+    } {
+      Rect(
+        Window.screenBounds.width - 450,
+        Window.screenBounds.height - 300,
+        400, 130);
+    };
+    var win = Window(header, bounds).front;
     StaticText(win, Rect(10, 10, 380, 40))
     .string_(header)
     .font_(Font("Helvetica", 30));
@@ -465,7 +486,10 @@ CueListWindow : SCViewHolder {
       };
       isFront = false;
     });
-    view = CueListView(win.view).resize_(5);
+
+    view = CueListView(win.view)
+    .parentWindow_(this.win)
+    .resize_(5);
   }
 
   makeCompleteWindow {
