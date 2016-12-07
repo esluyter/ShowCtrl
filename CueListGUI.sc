@@ -195,7 +195,7 @@ CueListView : SCViewHolder {
       this.handleKey(view, chr, mod, uni, key)
     })
     .keyUpAction_({ |view, chr, mod, uni, key|
-      if ((("{" ++ gui[\textBox].string ++ "}").asSymbol != cueList.currentCueFunc.def.sourceCode.asSymbol)) {
+      if ((("{ |thisCueList|\n" ++ gui[\textBox].string ++ "}").asSymbol != cueList.currentCueFunc.def.sourceCode.asSymbol)) {
         cueList.unsavedCueChanges_(true);
       } {
         cueList.unsavedCueChanges_(false);
@@ -269,7 +269,7 @@ CueListView : SCViewHolder {
   }
 
   saveCue {
-    var func = ("{" ++ gui[\textBox].string ++ "}").interpret;
+    var func = ("{ |thisCueList|\n" ++ gui[\textBox].string ++ "}").interpret;
     if (func.isNil) {
       gui[\topBlackPanel].background_(Color.red);
       AppClock.sched(0.1, { gui[\topBlackPanel].background_(Color.black); nil });
@@ -365,6 +365,7 @@ CueListView : SCViewHolder {
 
   cueList_ { |newcueList|
     cueList = newcueList;
+    gui[\textBox].interpretArgs_((thisCueList: cueList));
     newcueList.addDependant(this);
     this.refresh;
   }
@@ -411,7 +412,7 @@ CueListView : SCViewHolder {
     defer {
       gui[\curCue].string_(cueList.currentCueName);
 
-      gui[\textBox].string_(cueList.currentCueFunc.def.sourceCode.findRegexp("^\\{[\\n\\s]*(.*)\\}$")[1][1]);
+      gui[\textBox].string_(cueList.currentCueFunc.def.sourceCode.findRegexp("^\\{(\\s*\\|thisCueList\\|)?[\\n\\s]*(.*)\\}$")[2][1]);
       gui[\textBox].select((gui[\textBox].string.find("*/") ?? -3) + 3, 0);
 
       gui[\cueList].selection_([cueList.currentCueIndex]);

@@ -17,7 +17,8 @@ CueList {
     defaultfilepath = "defaultCue".resolveRelative;
     filepath = argfilepath ?? defaultfilepath;//thisProcess.nowExecutingPath.dirname;
 
-    defaultFunc = argdeffunc ? {/*
+    defaultFunc = argdeffunc ? { |thisCueList|
+/*
 
 Cue on:
 Page #:
@@ -44,9 +45,9 @@ Page #:
     lastExecutedCue = this.currentCueName();
     this.incrementCueIndex();
 
-    preExecuteHook.value(this, index, name, func);
-    func.value;
-    postExecuteHook.value(this, index, name, func);
+    preExecuteHook.(this, index, name, func);
+    func.(this);
+    postExecuteHook.(this, index, name, func);
   }
 
   incrementCueIndex {
