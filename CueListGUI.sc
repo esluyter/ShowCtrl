@@ -25,10 +25,10 @@ CueListView : SCViewHolder {
       .stringColor_(Color.white)
       .resize_(2),
 
-      cueList: ListView(view, Rect(0, 0, leftPanelWidth - margin, bounds.height - bottomPanelHeight - margin))
+      cueList: ListView(view, Rect(-1, -1, leftPanelWidth - margin + 1, bounds.height - bottomPanelHeight - margin + 1))
       .resize_(4),
 
-      textBox: CodeView(view, Rect(leftPanelWidth, 45 + (2 * margin), bounds.width - leftPanelWidth + 1, bounds.height - 35 - bottomPanelHeight - (5*margin)))
+      textBox: CodeView(view, Rect(leftPanelWidth - 1, 45 + (2 * margin), bounds.width - leftPanelWidth + 2, bounds.height - 35 - bottomPanelHeight - (5*margin)))
       .customTokens_((
         cue: "Cue on.*?\\n",
         page: "Page #.*?\\n",
@@ -359,7 +359,7 @@ CueListView : SCViewHolder {
     gui[\topBlackPanel].bounds_(Rect(leftPanelWidth, 0, bounds.width - leftPanelWidth, 46 + (2 * margin)));
     gui[\curCue].bounds_(Rect(leftPanelWidth + margin, 2*margin, bounds.width - leftPanelWidth - (3*margin), 35));
     gui[\cueList].bounds_(Rect(0, 0, leftPanelWidth - margin, bounds.height - bottomPanelHeight - margin));
-    gui[\textBox].bounds_(Rect(leftPanelWidth, 45 + (2 * margin), bounds.width - leftPanelWidth + 1, bounds.height - 35 - bottomPanelHeight - (5*margin)));
+    gui[\textBox].bounds_(Rect(leftPanelWidth - 1, 45 + (2 * margin), bounds.width - leftPanelWidth + 2, bounds.height - 35 - bottomPanelHeight - (5*margin)));
     gui[\resizePanel].bounds_(Rect(leftPanelWidth - margin, 0, margin, bounds.height - bottomPanelHeight - margin));
   }
 
@@ -421,7 +421,7 @@ CueListView : SCViewHolder {
 
   makeStyle {
     gui[\cueList].palette_(gui[\textBox].palette)
-    .background_(gui[\textBox].palette.base.alpha_(0.9))
+    .background_(gui[\textBox].palette.base.alpha_(0.97))
     .selectedStringColor_(Color.gray(gui[\textBox].palette.baseText.asHSV[2].round))
     .hiliteColor_(gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.2));
 
