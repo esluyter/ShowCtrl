@@ -1,7 +1,7 @@
 CueListView : SCViewHolder {
   var <cueList;
   var <font;
-  var <gui, <leftPanelWidth, bottomPanelHeight = 50, margin = 5, buttonWidth = 75;
+  var <gui, <leftPanelWidth, bottomPanelHeight = 50, <margin = 5, buttonWidth = 75;
   var dragStart;
   var savedSelection;
 
@@ -16,7 +16,7 @@ CueListView : SCViewHolder {
     leftPanelWidth = bounds.width / 3;
 
     gui = (
-      topBlackPanel: View(view, Rect(leftPanelWidth, margin, bounds.width - leftPanelWidth - margin, 35 + (2*margin)))
+      topBlackPanel: View(view, Rect(leftPanelWidth, 0, bounds.width - leftPanelWidth, 46 + (2 * margin)))
       .background_(Color.black)
       .resize_(2),
 
@@ -25,13 +25,10 @@ CueListView : SCViewHolder {
       .stringColor_(Color.white)
       .resize_(2),
 
-      cueList: ListView(view, Rect(margin, margin, leftPanelWidth - (2*margin), bounds.height - bottomPanelHeight - (2*margin)))
-      .background_(Color(0.18, 0.21, 0.25))
-      .stringColor_(Color.gray(0.65))
+      cueList: ListView(view, Rect(0, 0, leftPanelWidth - margin, bounds.height - bottomPanelHeight - margin))
       .resize_(4),
 
-      textBox: CodeView(view, Rect(leftPanelWidth, 35 + (4*margin), bounds.width - leftPanelWidth - margin, bounds.height - 35 - bottomPanelHeight - (5*margin)))
-      .oneDarkColorScheme
+      textBox: CodeView(view, Rect(leftPanelWidth, 45 + (2 * margin), bounds.width - leftPanelWidth + 1, bounds.height - 35 - bottomPanelHeight - (5*margin)))
       .customTokens_((
         cue: "Cue on.*?\\n",
         page: "Page #.*?\\n",
@@ -44,7 +41,7 @@ CueListView : SCViewHolder {
       ))
       .resize_(5),
 
-      resizePanel: View(view, Rect(leftPanelWidth - margin, margin, margin, bounds.height - bottomPanelHeight - (2*margin)))
+      resizePanel: View(view, Rect(leftPanelWidth - margin, 0, margin, bounds.height - bottomPanelHeight - margin))
       .background_(Color.gray(0, 0))
       .resize_(4)
       .mouseEnterAction_({ |v, x, y|
@@ -61,6 +58,10 @@ CueListView : SCViewHolder {
       }),
 
       bottomPanel: (
+        background: View(view, Rect(0, bounds.height - bottomPanelHeight - margin, bounds.width, bottomPanelHeight + margin))
+        .background_(Color.gray(0.9))
+        .resize_(8),
+
         updateButt: Button(view, Rect(bounds.width - buttonWidth - margin, bounds.height - bottomPanelHeight, buttonWidth, bottomPanelHeight / 2 - margin))
         .states_([["✎ Update"]])
         .resize_(9),
@@ -99,7 +100,11 @@ CueListView : SCViewHolder {
       )
     );
 
-    this.font_(Font("Input Sans", 12));
+    gui[\textBox].addDependant(this);
+
+    this.makeStyle;
+
+    this.font_(Font.monospace.size_(13));
 
     gui[\bottomPanel].keysValuesDo { |k, v| v.font_(Font.sansSerif(12)) };
     this.makeInteraction;
@@ -351,11 +356,11 @@ CueListView : SCViewHolder {
   leftPanelWidth_ { |newLeftPanelWidth|
     var bounds = view.bounds;
     leftPanelWidth = newLeftPanelWidth.max(margin);
-    gui[\topBlackPanel].bounds_(Rect(leftPanelWidth, margin, bounds.width - leftPanelWidth - margin, 35 + (2*margin)));
+    gui[\topBlackPanel].bounds_(Rect(leftPanelWidth, 0, bounds.width - leftPanelWidth, 46 + (2 * margin)));
     gui[\curCue].bounds_(Rect(leftPanelWidth + margin, 2*margin, bounds.width - leftPanelWidth - (3*margin), 35));
-    gui[\cueList].bounds_(Rect(margin, margin, leftPanelWidth - (2*margin), bounds.height - bottomPanelHeight - (2*margin)));
-    gui[\textBox].bounds_(Rect(leftPanelWidth, 35 + (4*margin), bounds.width - leftPanelWidth - margin, bounds.height - 35 - bottomPanelHeight - (5*margin)));
-    gui[\resizePanel].bounds_(Rect(leftPanelWidth - margin, margin, margin, bounds.height - bottomPanelHeight - (2*margin)));
+    gui[\cueList].bounds_(Rect(0, 0, leftPanelWidth - margin, bounds.height - bottomPanelHeight - margin));
+    gui[\textBox].bounds_(Rect(leftPanelWidth, 45 + (2 * margin), bounds.width - leftPanelWidth + 1, bounds.height - 35 - bottomPanelHeight - (5*margin)));
+    gui[\resizePanel].bounds_(Rect(leftPanelWidth - margin, 0, margin, bounds.height - bottomPanelHeight - margin));
   }
 
   cueList_ { |newcueList|
@@ -414,11 +419,22 @@ CueListView : SCViewHolder {
     }
   }
 
+  makeStyle {
+    gui[\cueList].palette_(gui[\textBox].palette)
+    .background_(gui[\textBox].palette.base.alpha_(0.9))
+    .selectedStringColor_(Color.gray(gui[\textBox].palette.baseText.asHSV[2].round))
+    .hiliteColor_(gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.2));
+
+    gui[\topBlackPanel].background_(gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.2));
+    gui[\curCue].stringColor_(Color.gray(gui[\textBox].palette.baseText.asHSV[2].round));
+  }
+
   update { |obj, what|
     switch (what)
     {\cueFuncs} { this.updateCues }
     {\unsavedChanges} { this.updateUnsaved }
-    {\currentCueIndex} { this.updateCurrentCue };
+    {\currentCueIndex} { this.updateCurrentCue }
+    {\colorScheme} { this.makeStyle };
   }
 }
 
@@ -432,6 +448,7 @@ CueListWindow : SCViewHolder {
 
   init { |name, bounds|
     win = Window(name, bounds).front
+    .background_(Color.clear)
     .acceptsMouseOver_(true)
     .toFrontAction_({
       toFrontAction.();
@@ -453,7 +470,7 @@ CueListWindow : SCViewHolder {
   makeCompleteWindow {
     var bounds, cueListWindow = this;
 
-    bounds = Rect(win.bounds.width - 100, 74, 500, 300);
+    bounds = Rect(win.bounds.width + view.margin, 0, 500, 300);
     if (completeWindow.notNil) { completeWindow.close };
 
     completeWindow = view.gui[\textBox].makeCompleteWindow(bounds, win);
