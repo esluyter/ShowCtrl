@@ -192,4 +192,10 @@ Page #:
     filepath = newfilepath;
     this.changed(\filepath);
   }
+
+  cueFuncs_ { |newcuefuncs|
+    cueFuncs = newcuefuncs;
+    this.changed(\cueFuncs);
+    this.changed(\unsavedChanges);
+  }
 }
