@@ -228,24 +228,24 @@ CueListView : SCViewHolder {
       Rect(
         parentWindow.bounds.left + (parentWindow.bounds.width / 2) - 200,
         parentWindow.bounds.top + (parentWindow.bounds.height / 3 * 2) - 50,
-        400, 100);
+        400, 110);
     } {
       Rect(
         Window.screenBounds.width - 450,
         Window.screenBounds.height - 300,
-        400, 100);
+        400, 110);
     };
-    var win = Window(header, bounds)
+    var win = Window(header, bounds, border: false)
     .onClose_({ suppressEndFront = false; suppressToFront = true; parentWindow.front; })
     .front;
 
     suppressEndFront = true; // don't get rid of completions window
 
-    StaticText(win, Rect(10, 10, 380, 40))
+    StaticText(win, Rect(10, 15, 380, 40))
     .string_(header)
     .font_(Font("Helvetica", 30));
 
-    button = Button(win, Rect(10, 60, 185, 30)).states_([["OK"]])
+    button = Button(win, Rect(10, 65, 185, 30)).states_([["OK"]])
     .action_({ action.value; win.close })
     .keyDownAction_({ |view, chr, mod, uni, key|
       if (key == 36) {
@@ -255,7 +255,7 @@ CueListView : SCViewHolder {
         win.close;
       };
     });
-    Button(win, Rect(205, 60, 185, 30)).states_([[cancelString]])
+    Button(win, Rect(205, 65, 185, 30)).states_([[cancelString]])
     .action_({ cancelAction.value; win.close });
   }
 
@@ -272,7 +272,7 @@ CueListView : SCViewHolder {
         Window.screenBounds.height - 300,
         400, 130);
     };
-    var win = Window(header, bounds)
+    var win = Window(header, bounds, border: false)
     .alwaysOnTop_(true)
     .onClose_({ suppressEndFront = false; suppressToFront = true; parentWindow.front; })
     .front;
@@ -541,7 +541,7 @@ CueListWindow : SCViewHolder {
   }
 
   init { |name, bounds|
-    win = Window(name, bounds).front
+    win = Window(name, bounds)
     .background_(Color.clear)
     .acceptsMouseOver_(true)
     .toFrontAction_({
@@ -563,7 +563,7 @@ CueListWindow : SCViewHolder {
     .parentWindow_(this.win)
     .resize_(5);
 
-    this.makeCompleteWindow;
+    this.makeCompleteWindow; // let the complete window bring cue list window to front :)
   }
 
   makeCompleteWindow {
@@ -576,6 +576,10 @@ CueListWindow : SCViewHolder {
 
     completeWindow.endFrontAction = {
       if (cueListWindow.isFront.not) { cueListWindow.completeWindow.visible = false };
+    };
+
+    completeWindow.toFrontAction = {
+      if (win.visible) { cueListWindow.view.suppressToFront = true; }
     };
   }
 
