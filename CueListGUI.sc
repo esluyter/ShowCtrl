@@ -2,17 +2,22 @@ CueListView : SCViewHolder {
   var <cueList;
   var <font, <gui, <leftPanelWidth, bottomPanelHeight = 50, <margin = 5, buttonWidth = 75;
   var dragStart, savedSelection;
-  var <>parentWindow;
+  var <>parentWindow, <suppressEndFront = false, <>suppressToFront = false;
+  var textBoxContainer;
 
   *new { |parent, bounds|
     ^super.new.init(parent, bounds);
   }
 
   init { |parent, bounds|
+
     bounds = bounds ?? Rect(0, 0, parent.bounds.width, parent.bounds.height);
     view = View(parent, bounds);
 
     leftPanelWidth = bounds.width / 3;
+
+    textBoxContainer = View(view, Rect(leftPanelWidth, 45 + (2 * margin), bounds.width - leftPanelWidth, bounds.height - 35 - bottomPanelHeight - (5*margin)))
+    .resize_(5);
 
     gui = (
       topBlackPanel: View(view, Rect(leftPanelWidth, 0, bounds.width - leftPanelWidth, 46 + (2 * margin)))
@@ -27,7 +32,7 @@ CueListView : SCViewHolder {
       cueList: ListView(view, Rect(-1, -1, leftPanelWidth - margin + 1, bounds.height - bottomPanelHeight - margin + 1))
       .resize_(4),
 
-      textBox: CodeView(view, Rect(leftPanelWidth - 1, 45 + (2 * margin), bounds.width - leftPanelWidth + 2, bounds.height - 35 - bottomPanelHeight - (5*margin)))
+      textBox: CodeView(textBoxContainer, Rect(-1, 0, bounds.width - leftPanelWidth + 2, bounds.height - 35 - bottomPanelHeight - (5*margin)))
       .customTokens_((
         cue: "Cue on.*?\\n",
         page: "Page #.*?\\n",
@@ -167,7 +172,7 @@ CueListView : SCViewHolder {
         if (mod.isAlt) {
           this.addCueAbove;
         } {
-          cueList.moveCurrentCueUp;
+          this.moveCurrentCueUp;
         };
         ^true;
       };
@@ -175,7 +180,7 @@ CueListView : SCViewHolder {
         if (mod.isAlt) {
           this.addCueBelow;
         } {
-          cueList.moveCurrentCueDown;
+          this.moveCurrentCueDown;
         };
         ^true;
       };
@@ -186,12 +191,12 @@ CueListView : SCViewHolder {
     var buttons = gui[\bottomPanel];
     buttons[\updateButt].action_({ this.saveCue });
     buttons[\backupsButt].action_({ CueListBackupBrowser.show(cueList) });
-    buttons[\refreshButt].action({ this.openCueFuncs });
+    buttons[\refreshButt].action_({ this.openCueFuncs });
     buttons[\saveButt].action_({ this.saveCueFuncs });
     buttons[\renameButt].action_({ this.renameCue });
     buttons[\deleteButt].action_({ this.deleteCue });
-    buttons[\moveUpButt].action_({ cueList.moveCurrentCueUp });
-    buttons[\moveDownButt].action_({ cueList.moveCurrentCueDown });
+    buttons[\moveUpButt].action_({ this.moveCurrentCueUp });
+    buttons[\moveDownButt].action_({ this.moveCurrentCueDown });
     buttons[\addBeforeButt].action_({ this.addCueAbove });
     buttons[\addAfterButt].action_({ this.addCueBelow });
 
@@ -209,7 +214,7 @@ CueListView : SCViewHolder {
       this.handleKey(view, chr, mod, uni, key)
     })
     .keyUpAction_({ |view, chr, mod, uni, key|
-      if ((("{ |thisCueList|\n" ++ gui[\textBox].string ++ "}").asSymbol != cueList.currentCueFunc.def.sourceCode.asSymbol)) {
+      if ((("{ |thisCueList|\n" ++ gui[\textBox].string ++ "\n}").asSymbol != cueList.currentCueFunc.def.sourceCode.asSymbol)) {
         cueList.unsavedCueChanges_(true);
       } {
         cueList.unsavedCueChanges_(false);
@@ -230,7 +235,12 @@ CueListView : SCViewHolder {
         Window.screenBounds.height - 300,
         400, 100);
     };
-    var win = Window(header, bounds).front;
+    var win = Window(header, bounds)
+    .onClose_({ suppressEndFront = false; suppressToFront = true; parentWindow.front; })
+    .front;
+
+    suppressEndFront = true; // don't get rid of completions window
+
     StaticText(win, Rect(10, 10, 380, 40))
     .string_(header)
     .font_(Font("Helvetica", 30));
@@ -262,7 +272,13 @@ CueListView : SCViewHolder {
         Window.screenBounds.height - 300,
         400, 130);
     };
-    var win = Window(header, bounds).front;
+    var win = Window(header, bounds)
+    .alwaysOnTop_(true)
+    .onClose_({ suppressEndFront = false; suppressToFront = true; parentWindow.front; })
+    .front;
+
+    suppressEndFront = true; // don't get rid of completions window
+
     StaticText(win, Rect(10, 10, 380, 40))
     .string_(header)
     .font_(Font("Helvetica", 30));
@@ -305,15 +321,16 @@ CueListView : SCViewHolder {
   }
 
   saveCue {
-    var func = ("{ |thisCueList|\n" ++ gui[\textBox].string ++ "}").interpret;
+    var func = ("{ |thisCueList|\n" ++ gui[\textBox].string ++ "\n}").interpret;
+    var restoreBackground = gui[\topBlackPanel].background;
     if (func.isNil) {
       gui[\topBlackPanel].background_(Color.red);
-      AppClock.sched(0.1, { gui[\topBlackPanel].background_(Color.black); nil });
+      AppClock.sched(0.1, { gui[\topBlackPanel].background_(restoreBackground); nil });
       AppClock.sched(0.2, { gui[\topBlackPanel].background_(Color.red); nil });
-      AppClock.sched(0.3, { gui[\topBlackPanel].background_(Color.black); nil });
+      AppClock.sched(0.3, { gui[\topBlackPanel].background_(restoreBackground); nil });
     } {
       gui[\topBlackPanel].background_(Color.green);
-      AppClock.sched(0.2, { gui[\topBlackPanel].background_(Color.black); nil });
+      AppClock.sched(0.2, { gui[\topBlackPanel].background_(restoreBackground); nil });
       cueList.currentCueFunc_(func);
     };
   }
@@ -357,6 +374,7 @@ CueListView : SCViewHolder {
         cueList.currentCueIndex = 0;
       }, fileMode: 2, acceptMode: 0, stripResult: true);
     };
+    "huh".postln;
 
     if (cueList.unsavedListChanges || cueList.unsavedCueChanges) {
       this.confirmBox("Save first?", {
@@ -374,9 +392,38 @@ CueListView : SCViewHolder {
     };
   }
 
+  moveCurrentCueDown {
+    if (cueList.unsavedCueChanges) {
+      this.confirmBox("Discard cue edits?", {
+        cueList.unsavedCueChanges = false;
+        cueList.moveCurrentCueDown;
+      });
+      ^nil;
+    };
+    cueList.moveCurrentCueDown;
+  }
+
+  moveCurrentCueUp {
+    if (cueList.unsavedCueChanges) {
+      this.confirmBox("Discard cue edits?", {
+        cueList.unsavedCueChanges = false;
+        cueList.moveCurrentCueUp;
+      });
+      ^nil;
+    };
+    cueList.moveCurrentCueUp;
+  }
+
   addCueAbove {
     var action = { |string|
       cueList.addCueBeforeCurrent(string);
+    };
+    if (cueList.unsavedCueChanges) {
+      this.confirmBox("Discard cue edits?", {
+        cueList.unsavedCueChanges = false;
+        this.dialogBox("New cue before", action);
+      });
+      ^nil;
     };
     this.dialogBox("New cue before", action);
   }
@@ -385,6 +432,13 @@ CueListView : SCViewHolder {
     var action = { |string|
       cueList.addCueAfterCurrent(string);
       cueList.incrementCueIndex;
+    };
+    if (cueList.unsavedCueChanges) {
+      this.confirmBox("Discard cue edits?", {
+        cueList.unsavedCueChanges = false;
+        this.dialogBox("New cue after", action);
+      });
+      ^nil;
     };
     this.dialogBox("New cue after", action);
   }
@@ -395,7 +449,7 @@ CueListView : SCViewHolder {
     gui[\topBlackPanel].bounds_(Rect(leftPanelWidth, 0, bounds.width - leftPanelWidth, 46 + (2 * margin)));
     gui[\curCue].bounds_(Rect(leftPanelWidth + margin, 2*margin, bounds.width - leftPanelWidth - (3*margin), 35));
     gui[\cueList].bounds_(Rect(0, 0, leftPanelWidth - margin, bounds.height - bottomPanelHeight - margin));
-    gui[\textBox].bounds_(Rect(leftPanelWidth - 1, 45 + (2 * margin), bounds.width - leftPanelWidth + 2, bounds.height - 35 - bottomPanelHeight - (5*margin)));
+    textBoxContainer.bounds_(Rect(leftPanelWidth, 45 + (2 * margin), bounds.width - leftPanelWidth, bounds.height - 35 - bottomPanelHeight - (5*margin)));
     gui[\resizePanel].bounds_(Rect(leftPanelWidth - margin, 0, margin, bounds.height - bottomPanelHeight - margin));
   }
 
@@ -448,10 +502,9 @@ CueListView : SCViewHolder {
     defer {
       gui[\curCue].string_(cueList.currentCueName);
 
-      gui[\textBox].string_(cueList.currentCueFunc.def.sourceCode.findRegexp("^\\{(\\s*\\|thisCueList\\|)?[\\n\\s]*(.*)\\}$")[2][1]);
+      gui[\textBox].string_(cueList.currentCueFunc.def.sourceCode.findRegexp("^\\{(\\s*\\|thisCueList\\|)?[\\n\\s]*(.*?)\\n?\\}$")[2][1]);
       gui[\textBox].select((gui[\textBox].string.find("*/") ?? -3) + 3, 0);
 
-      gui[\cueList].selection_([cueList.currentCueIndex]);
       gui[\cueList].selection_([cueList.currentCueIndex]);
     }
   }
@@ -466,11 +519,15 @@ CueListView : SCViewHolder {
     gui[\curCue].stringColor_(Color.gray(gui[\textBox].palette.baseText.asHSV[2].round));
   }
 
-  update { |obj, what|
+  update { |obj, what, thing|
     switch (what)
     {\cueFuncs} { this.updateCues }
     {\unsavedChanges} { this.updateUnsaved }
     {\currentCueIndex} { this.updateCurrentCue }
+    {\confirmForceCueIndex} {
+      gui[\cueList].selection_([cueList.currentCueIndex]); // reset cuelist
+      this.confirmBox("Discard cue edits?", { cueList.currentCueIndex_(thing, true) })
+    }
     {\colorScheme} { this.makeStyle };
   }
 }
@@ -490,14 +547,14 @@ CueListWindow : SCViewHolder {
     .toFrontAction_({
       toFrontAction.();
       if (completeWindow.notNil) {
-        completeWindow.visible = true;
+        if (view.suppressToFront) { view.suppressToFront = false; } { completeWindow.visible = true; };
       };
       isFront = true;
     })
     .endFrontAction_({
       endFrontAction.();
       if (completeWindow.notNil) {
-        if (completeWindow.isFront.not) { completeWindow.visible = false };
+        if (completeWindow.isFront.not && view.suppressEndFront.not) { completeWindow.visible = false };
       };
       isFront = false;
     });
@@ -505,6 +562,8 @@ CueListWindow : SCViewHolder {
     view = CueListView(win.view)
     .parentWindow_(this.win)
     .resize_(5);
+
+    this.makeCompleteWindow;
   }
 
   makeCompleteWindow {

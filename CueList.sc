@@ -9,13 +9,16 @@ CueList {
 
   var <>preExecuteHook, <>postExecuteHook;
 
-  *new { |filepath, defaultFunc|
-    ^super.new.init(filepath, defaultFunc);
+  *new { |filepath, preExecuteHook, postExecuteHook, defaultFunc|
+    ^super.new.init(filepath, preExecuteHook, postExecuteHook, defaultFunc);
   }
 
-  init { |argfilepath, argdeffunc|
+  init { |argfilepath, argprehook, argposthook, argdeffunc|
     defaultfilepath = "defaultCue".resolveRelative;
     filepath = argfilepath ?? defaultfilepath;//thisProcess.nowExecutingPath.dirname;
+
+    preExecuteHook = argprehook;
+    postExecuteHook = argposthook;
 
     defaultFunc = argdeffunc ? { |thisCueList|
 /*
@@ -42,25 +45,33 @@ Page #:
     var func = this.currentCueFunc;
     var name = this.currentCueName;
     var index = this.currentCueIndex;
-    lastExecutedCue = this.currentCueName();
-    this.incrementCueIndex();
 
     preExecuteHook.(this, index, name, func);
     func.(this);
     postExecuteHook.(this, index, name, func);
+
+
+    lastExecutedCue = name;
+    if (this.currentCueIndex == index) { this.incrementCueIndex() };
   }
 
-  incrementCueIndex {
-    this.currentCueIndex_(currentCueIndex + 1);
+  incrementCueIndex { |force = false|
+    this.currentCueIndex_(currentCueIndex + 1, force);
   }
 
-  decrementCueIndex {
-    this.currentCueIndex_(currentCueIndex - 1);
+  decrementCueIndex { |force = false|
+    this.currentCueIndex_(currentCueIndex - 1, force);
   }
 
-  currentCueIndex_ { |newindex|
+  currentCueIndex_ { |newindex, force = false|
+    if (unsavedCueChanges && force.not) {
+      this.changed(\confirmForceCueIndex, newindex);
+      "CueList: Confirm discard changes and use force=true".postln;
+      ^false;
+    };
+
     currentCueIndex = newindex % cueFuncs.size;
-    unsavedCueChanges = false;
+    this.unsavedCueChanges = false;
     this.changed(\currentCueIndex);
   }
 
@@ -82,7 +93,7 @@ Page #:
 
   gotoCueName { |name|
     cueFuncs.do { |cue, i|
-      if (cue[\name] == name) {
+      if (cue[\name].asSymbol == name.asSymbol) {
         this.currentCueIndex_(i);
       };
     };
