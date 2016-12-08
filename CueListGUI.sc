@@ -118,21 +118,26 @@ CueListView : SCViewHolder {
     if (mod.isAlt && mod.isCmd.not) {
       if (key == 125) { // down
         cueList.incrementCueIndex;
+        ^true;
       };
       if (key == 126) { // up
         cueList.decrementCueIndex;
+        ^true;
       };
       if (key == 49) { //space
         cueList.executeCurrentCue;
+        ^true;
       };
     };
 
     if (mod.isCtrl) { // ctrl:
       if (key == 32) { // u
         this.saveCue;
+        ^true;
       };
       if (key == 13) { // w
         this.saveCueFuncs;
+        ^true;
       };
     };
 
@@ -140,21 +145,23 @@ CueListView : SCViewHolder {
       if (key == 1) { // s
         this.saveCue;
         this.saveCueFuncs;
+        ^true;
       };
       if (key == 31) { // o
         this.openCueFuncs;
-      };
-      if (key == 2) { // d
-        HelpBrowser.openHelpFor(view.selectedString);
+        ^true;
       };
       if (key == 15) { // r
         this.renameCue;
+        ^true;
       };
       if (key == 5) { // g
         this.gotoCue;
+        ^true;
       };
       if (key == 51) { // delete
         this.deleteCue;
+        ^true;
       };
       if (key == 126) { // up
         if (mod.isAlt) {
@@ -162,6 +169,7 @@ CueListView : SCViewHolder {
         } {
           cueList.moveCurrentCueUp;
         };
+        ^true;
       };
       if (key == 125) { // down
         if (mod.isAlt) {
@@ -169,6 +177,7 @@ CueListView : SCViewHolder {
         } {
           cueList.moveCurrentCueDown;
         };
+        ^true;
       };
     };
   }
@@ -603,7 +612,6 @@ CueListBackupBrowser {
     gui[\times] = gui[\menus].children[3];
 
     gui[\cueList] = ListView(win, Rect(0, 210, 200, win.bounds.height - 255))
-    .items_(backupfuncs[2016][11][6][1][\38][\38].collect(_.name))
     .resize_(4);
 
     gui[\resizePanel] = View(win, Rect(200, 210, 5, win.bounds.height - 255))
@@ -648,7 +656,6 @@ CueListBackupBrowser {
       .margins_(10)
     );
 
-
     (gui[\menus].children ++ gui[\cueList]).do { |menu|
       menu.palette_(gui[\textBox].palette)
       .background_(gui[\textBox].palette.base.alpha_(0.97))
@@ -667,7 +674,7 @@ CueListBackupBrowser {
     // INTERACTION
 
     displayCuefuncs = { |cuefuncs|
-      var oldindex = gui[\cueList].value;
+      var oldindex = gui[\cueList].value ?? cueList.currentCueIndex;
       selectedfuncs = cuefuncs;
 
       gui[\cueList].items = cuefuncs.collect(_.name);
