@@ -705,7 +705,7 @@ CueListView : SCViewHolder {
 
 
 CueListWindow : SCViewHolder {
-  var <win, <isFront = false, <>toFrontAction, <>endFrontAction, <completeWindow, <postView, <postViewHeight = 200, <resizePanel, dragStart;
+  var <win, <isFront = false, <>toFrontAction, <>endFrontAction, <completeWindow, <postView, <postViewHeight = 125, <resizePanel, dragStart;
 
   *new { |name="", bounds|
     ^super.new.init(name, bounds);
