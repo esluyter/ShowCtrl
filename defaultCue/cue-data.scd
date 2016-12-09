@@ -1,13 +1,21 @@
-[ ( 'name': "Init", 'func': {/*
+[ ( 'name': "Init", 'func': { |thisCueList|
+// Initial settings
+} ), ( 'name': "Preset", 'func': { |thisCueList|
+/*
 
-Init stuff
-
-*/
-
-} ), ( 'name': "--", 'func': {} ), ( 'name': "Ableton TOC", 'func': {/*
-
-Ableton table of contents
+Cue on: Preset
+Page #: 0
 
 */
 
+} ), ( 'name': "...", 'func': { |thisCueList|
+/*
+
+Cue on:
+Page #:
+
+*/
+
+} ), ( 'name': "Cleanup", 'func': { |thisCueList|
+// Free resources
 } ) ]

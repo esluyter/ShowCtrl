@@ -119,56 +119,59 @@ CueListView : SCViewHolder {
     gui[\textBox].focus;
   }
 
-  handleKey { |view, chr, mod, uni, key|
+  handleKey { |view, chr, mod, uni, keycode, key|
     if (mod.isAlt && mod.isCmd.not) {
-      if (key == 125) { // down
+      if (keycode == 125) { // down
         cueList.incrementCueIndex;
         ^true;
       };
-      if (key == 126) { // up
+      if (keycode == 126) { // up
         cueList.decrementCueIndex;
         ^true;
       };
-      if (key == 49) { //space
+      if (keycode == 49) { //space
         cueList.executeCurrentCue;
         ^true;
       };
     };
 
     if (mod.isCtrl) { // ctrl:
-      if (key == 32) { // u
+      if (keycode == 32) { // u
         this.saveCue;
         ^true;
       };
-      if (key == 13) { // w
+      if (keycode == 13) { // w
         this.saveCueFuncs;
         ^true;
       };
     };
 
     if (mod.isCmd) {
-      if (key == 1) { // s
+      if (keycode == 1) { // s
         this.saveCue;
         this.saveCueFuncs;
         ^true;
       };
-      if (key == 31) { // o
+      if (keycode == 31) { // o
         this.openCueFuncs;
         ^true;
       };
-      if (key == 15) { // r
+      if (key == 78) { // n
+        this.newCueFuncs;
+      };
+      if (keycode == 15) { // r
         this.renameCue;
         ^true;
       };
-      if (key == 5) { // g
+      if (keycode == 5) { // g
         this.gotoCue;
         ^true;
       };
-      if (key == 51) { // delete
+      if (keycode == 51) { // delete
         this.deleteCue;
         ^true;
       };
-      if (key == 126) { // up
+      if (keycode == 126) { // up
         if (mod.isAlt) {
           this.addCueAbove;
         } {
@@ -176,7 +179,7 @@ CueListView : SCViewHolder {
         };
         ^true;
       };
-      if (key == 125) { // down
+      if (keycode == 125) { // down
         if (mod.isAlt) {
           this.addCueBelow;
         } {
@@ -206,14 +209,14 @@ CueListView : SCViewHolder {
       cueList.currentCueIndex_(v.selection[0]);
       gui[\textBox].focus;
     })
-    .keyDownAction_({ |view, chr, mod, uni, key|
-      if (mod.isAlt || mod.isCtrl || mod.isCmd) { this.handleKey(view, chr, mod, uni, key) };
+    .keyDownAction_({ |view, chr, mod, uni, keycode, key|
+      if (mod.isAlt || mod.isCtrl || mod.isCmd) { this.handleKey(view, chr, mod, uni, keycode, key) };
     });
 
-    gui[\textBox].modKeyHandler_({ |view, chr, mod, uni, key|
-      this.handleKey(view, chr, mod, uni, key)
+    gui[\textBox].modKeyHandler_({ |view, chr, mod, uni, keycode, key|
+      this.handleKey(view, chr, mod, uni, keycode, key)
     })
-    .keyUpAction_({ |view, chr, mod, uni, key|
+    .keyUpAction_({ |view, chr, mod, uni, keycode|
       if ((("{ |thisCueList|\n" ++ gui[\textBox].string ++ "\n}").asSymbol != cueList.currentCueFunc.def.sourceCode.asSymbol)) {
         cueList.unsavedCueChanges_(true);
       } {
@@ -247,11 +250,11 @@ CueListView : SCViewHolder {
 
     button = Button(win, Rect(10, 65, 185, 30)).states_([["OK"]])
     .action_({ action.value; win.close })
-    .keyDownAction_({ |view, chr, mod, uni, key|
-      if (key == 36) {
+    .keyDownAction_({ |view, chr, mod, uni, keycode|
+      if (keycode == 36) {
         button.doAction;
       };
-      if (key == 53) {
+      if (keycode == 53) {
         win.close;
       };
     });
@@ -285,11 +288,11 @@ CueListView : SCViewHolder {
 
     field = TextField(win, Rect(10, 50, 380, 30))
     .string_(value)
-    .keyUpAction_({ |view, chr, mod, uni, key|
-      if (key == 36) {
+    .keyUpAction_({ |view, chr, mod, uni, keycode|
+      if (keycode == 36) {
         button.doAction;
       };
-      if (key == 53) {
+      if (keycode == 53) {
         win.close;
       };
     });
@@ -374,7 +377,6 @@ CueListView : SCViewHolder {
         cueList.currentCueIndex = 0;
       }, fileMode: 2, acceptMode: 0, stripResult: true);
     };
-    "huh".postln;
 
     if (cueList.unsavedListChanges || cueList.unsavedCueChanges) {
       this.confirmBox("Save first?", {
@@ -389,6 +391,25 @@ CueListView : SCViewHolder {
       });
     } {
       openFile.();
+    };
+  }
+
+  newCueFuncs {
+    if (cueList.unsavedListChanges || cueList.unsavedCueChanges) {
+      this.confirmBox("Save first?", {
+        {
+          this.saveCue;
+          this.saveCueFuncs {
+            this.newCueFuncs
+          };
+        }.defer(0.2);
+      }, "Don't save", {
+        cueList.filepath = cueList.defaultfilepath;
+        cueList.refreshCueFuncs;
+      });
+    } {
+      cueList.filepath = cueList.defaultfilepath;
+      cueList.refreshCueFuncs;
     };
   }
 
@@ -499,10 +520,13 @@ CueListView : SCViewHolder {
   }
 
   updateCurrentCue {
+    var str = cueList.currentCueFunc.def.sourceCode.findRegexp("^\\{(\\s*\\|thisCueList\\|)?[\\n\\s]*(.*)\\}$")[2][1];
+    if (str[str.size - 1] == $\n) { str = str[0..(str.size - 2)] };
+
     defer {
       gui[\curCue].string_(cueList.currentCueName);
 
-      gui[\textBox].string_(cueList.currentCueFunc.def.sourceCode.findRegexp("^\\{(\\s*\\|thisCueList\\|)?[\\n\\s]*(.*?)\\n?\\}$")[2][1]);
+      gui[\textBox].string_(str);
       gui[\textBox].select((gui[\textBox].string.find("*/") ?? -3) + 3, 0);
 
       gui[\cueList].selection_([cueList.currentCueIndex]);
