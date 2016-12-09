@@ -21,10 +21,10 @@ CueListView : SCViewHolder {
 
     gui = (
       topBlackPanel: View(view, Rect(leftPanelWidth, 0, bounds.width - leftPanelWidth, 46 + (2 * margin)))
-      .background_(Color.black)
+      .background_(Color.clear)
       .resize_(2),
 
-      curCue: StaticText(view, Rect(leftPanelWidth + margin, margin, bounds.width - leftPanelWidth - (3*margin), 45))
+      curCue: StaticText(view, Rect(leftPanelWidth + margin, margin, bounds.width - leftPanelWidth - (3*margin) - buttonWidth, 45))
       .string_("Current cue")
       .stringColor_(Color.white)
       .resize_(2),
@@ -62,52 +62,97 @@ CueListView : SCViewHolder {
       }),
 
       bottomPanel: (
-        background: View(view, Rect(0, bounds.height - bottomPanelHeight - margin, bounds.width, bottomPanelHeight + margin))
+        background: View(view, Rect(0, bounds.height - bottomPanelHeight - margin - 1, bounds.width, bottomPanelHeight + margin))
         .background_(Color.gray(0.9))
         .resize_(8),
 
-        updateButt: Button(view, Rect(bounds.width - buttonWidth - margin, bounds.height - bottomPanelHeight, buttonWidth, bottomPanelHeight / 2 - margin))
-        .states_([["✎ Update"]])
-        .resize_(9),
-
-        backupsButt: Button(view, Rect(bounds.width - buttonWidth - margin, bounds.height - (bottomPanelHeight/2), buttonWidth, bottomPanelHeight / 2 - margin))
+        backupsButt: Button(view, Rect(bounds.width - buttonWidth - margin, margin, buttonWidth, (45 - margin) / 2))
         .states_([["Backups..."]])
-        .resize_(9),
+        .resize_(3),
 
-        refreshButt: Button(view, Rect(margin, bounds.height - bottomPanelHeight, buttonWidth, bottomPanelHeight / 2 - margin))
-        .states_([["Open..."]])
+        updateButt: Button(view, Rect(bounds.width - buttonWidth - margin, margin + ((45 + margin) / 2), buttonWidth, (45 - margin) / 2))
+        .states_([["✎ Update"]])
+        .resize_(3)
+        .visible_(false),
+
+        // --- actual bottom panel... :/ ---
+
+        goButt: Button(view, Rect(margin * 1.5, bounds.height - bottomPanelHeight, 2 * buttonWidth / 3 - margin, bottomPanelHeight - margin))
+        .states_([["GO"]])
         .resize_(7),
 
-        saveButt: Button(view, Rect(margin, bounds.height - (bottomPanelHeight/2), buttonWidth, bottomPanelHeight / 2 - margin))
-        .states_([["Save"]])
+        upButt: Button(view, Rect(margin * 1.5 + (2 * buttonWidth / 3), bounds.height - bottomPanelHeight, buttonWidth / 3, bottomPanelHeight / 2 - margin))
+        .states_([["▲"]])
         .resize_(7),
 
-        renameButt: Button(view, Rect(buttonWidth + (2*margin), bounds.height - bottomPanelHeight, buttonWidth, bottomPanelHeight / 2 - margin))
+        downButt: Button(view, Rect(margin * 1.5 + (2 * buttonWidth / 3), bounds.height - (bottomPanelHeight / 2), buttonWidth / 3, bottomPanelHeight / 2 - margin))
+        .states_([["▼"]])
+        .resize_(7),
+
+        separator0: View(view, Rect(margin * 1.75 + (buttonWidth * 1.1), bounds.height - bottomPanelHeight, 1, bottomPanelHeight - margin))
+        .background_(Color.gray(0.8))
+        .resize_(7),
+
+        renameButt: Button(view, Rect(margin * 2 + (buttonWidth * 1.2), bounds.height - bottomPanelHeight, buttonWidth, bottomPanelHeight / 2 - margin))
         .states_([["✎ Rename"]])
         .resize_(7),
 
-        deleteButt: Button(view, Rect(buttonWidth + (2*margin), bounds.height - (bottomPanelHeight/2), buttonWidth, bottomPanelHeight / 2 - margin))
+        deleteButt: Button(view, Rect(margin * 2 + (buttonWidth * 1.2), bounds.height - (bottomPanelHeight/2), buttonWidth, bottomPanelHeight / 2 - margin))
         .states_([["⌫ Delete"]])
         .resize_(7),
 
-        moveUpButt: Button(view, Rect((2*buttonWidth) + (3*margin), bounds.height - bottomPanelHeight, buttonWidth - 12, bottomPanelHeight / 2 - margin))
+        moveUpButt: Button(view, Rect(margin * 3 + (buttonWidth * 2.2), bounds.height - bottomPanelHeight, buttonWidth - 12, bottomPanelHeight / 2 - margin))
         .states_([["↑ Move"]])
         .resize_(7),
 
-        moveDownButt: Button(view, Rect((2*buttonWidth) + (3*margin), bounds.height - (bottomPanelHeight/2), buttonWidth - 12, bottomPanelHeight / 2 - margin))
+        moveDownButt: Button(view, Rect(margin * 3 + (buttonWidth * 2.2), bounds.height - (bottomPanelHeight/2), buttonWidth - 12, bottomPanelHeight / 2 - margin))
         .states_([["↓ Move"]])
         .resize_(7),
 
-        addBeforeButt: Button(view, Rect((3*buttonWidth) + (4*margin) - 12, bounds.height - bottomPanelHeight, buttonWidth - 12, bottomPanelHeight / 2 - margin))
+        addBeforeButt: Button(view, Rect(margin * 4 + (buttonWidth * 3.2) - 12, bounds.height - bottomPanelHeight, buttonWidth - 12, bottomPanelHeight / 2 - margin))
         .states_([["+↑ Add"]])
         .resize_(7),
 
-        addAfterButt: Button(view, Rect((3*buttonWidth) + (4*margin) - 12, bounds.height - (bottomPanelHeight/2), buttonWidth - 12, bottomPanelHeight / 2 - margin))
+        addAfterButt: Button(view, Rect(margin * 4 + (buttonWidth * 3.2) - 12, bounds.height - (bottomPanelHeight/2), buttonWidth - 12, bottomPanelHeight / 2 - margin))
         .states_([["+↓ Add"]])
-        .resize_(7)
+        .resize_(7),
+
+
+        leftBackground: View(view, Rect(margin * 4.25 + (buttonWidth * 4.4) - 24, bounds.height - bottomPanelHeight - margin - 1, bounds.width - (margin * 4.25 + (buttonWidth * 4.4) - 24), bottomPanelHeight + margin))
+        .resize_(8),
+
+
+
+
+        saveButt: Button(view, Rect(margin * 4.5 + (buttonWidth * 4.6) - 24, bounds.height - bottomPanelHeight, buttonWidth * 1.1, bottomPanelHeight / 2 - margin))
+        .states_([["Save list"]])
+        .resize_(7),
+
+        refreshButt: Button(view, Rect(margin * 4.5 + (buttonWidth * 4.6) - 24, bounds.height - (bottomPanelHeight/2), buttonWidth * 1.1, bottomPanelHeight / 2 - margin))
+        .states_([["Open list..."]])
+        .resize_(7),
+
+
+        separator2: View(view, Rect((5.8*buttonWidth) + (4.75*margin) - 24, bounds.height - bottomPanelHeight, 1, bottomPanelHeight - margin))
+        .background_(Color.gray(0.8))
+        .resize_(7),
+
+
+        colorSchemeLabel: StaticText(view, Rect((5.9*buttonWidth) + (5*margin) - 24, bounds.height - bottomPanelHeight + 1, buttonWidth * 2, bottomPanelHeight / 2 - margin))
+        .string_("Color scheme:")
+        .resize_(7),
+
+        colorScheme: EZPopUpMenu(view, Rect((5.9*buttonWidth) + (5*margin) - 24, bounds.height - (bottomPanelHeight/2) - 3, buttonWidth * 2, bottomPanelHeight / 2 - margin), nil, [
+          "One Dark" -> { gui[\textBox].oneDarkColorScheme },
+          "One Light" -> { gui[\textBox].oneLightColorScheme },
+          "Paper Light" -> { gui[\textBox].lightColorScheme },
+          "Bright Dark" -> { gui[\textBox].darkColorScheme }
+        ])
+
       )
     );
 
+    gui[\bottomPanel][\colorScheme].view.resize_(7);
     gui[\textBox].addDependant(this);
 
     this.makeStyle;
@@ -202,6 +247,10 @@ CueListView : SCViewHolder {
     buttons[\moveDownButt].action_({ this.moveCurrentCueDown });
     buttons[\addBeforeButt].action_({ this.addCueAbove });
     buttons[\addAfterButt].action_({ this.addCueBelow });
+
+    buttons[\upButt].action_({ cueList.decrementCueIndex });
+    buttons[\downButt].action_({ cueList.incrementCueIndex });
+    buttons[\goButt].action_({ cueList.executeCurrentCue });
 
 
 
@@ -332,33 +381,75 @@ CueListView : SCViewHolder {
       AppClock.sched(0.2, { gui[\topBlackPanel].background_(Color.red); nil });
       AppClock.sched(0.3, { gui[\topBlackPanel].background_(restoreBackground); nil });
     } {
-      gui[\topBlackPanel].background_(Color.green);
-      AppClock.sched(0.2, { gui[\topBlackPanel].background_(restoreBackground); nil });
+      restoreBackground = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.2);
+      {
+        gui[\topBlackPanel].background = gui[\textBox].palette.base.blend(Color.green, 0.8);
+        gui[\cueList].hiliteColor = gui[\textBox].palette.base.blend(Color.green, 0.8);
+        gui[\bottomPanel][\updateButt].visible_(true).states = [[
+          gui[\bottomPanel][\updateButt].states[0][0],
+          nil,
+          Color.green
+        ]];
+        nil
+      }.defer(0.001);
+      {
+        gui[\topBlackPanel].background = restoreBackground;
+        gui[\cueList].hiliteColor = restoreBackground;
+        gui[\bottomPanel][\updateButt].visible = false;
+      }.defer(0.2);
       cueList.currentCueFunc_(func);
     };
   }
 
   saveCueFuncs { |action|
-    if (cueList.saveCueFuncs.not) {
+    var celebrate = {
+      var restoreBackground = gui[\textBox].palette.base;
+      var buttonText = gui[\textBox].palette.baseText;
+      var buttonColor = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.1);
+      {
+        gui[\cueList].background = gui[\textBox].palette.base.blend(Color.green, 0.1).alpha_(0.97);
+        gui[\bottomPanel][\saveButt].states = [[
+          gui[\bottomPanel][\saveButt].states[0][0],
+          nil,
+          Color.green
+        ]];
+        nil
+      }.defer(0.001);
+      {
+        gui[\cueList].background = restoreBackground;
+        gui[\bottomPanel][\saveButt].states = [[
+          gui[\bottomPanel][\saveButt].states[0][0],
+          buttonText,
+          buttonColor
+        ]];
+        gui[\bottomPanel][\backupsButt].visible = true;
+      }.defer(0.2);
+    };
+
+    if (cueList.saveCueFuncs) {
+      celebrate.();
+    } {
       FileDialog({ |path|
         path = path.asPathName;
         path = path.pathOnly +/+ path.fileNameWithoutExtension;
-        ("rm -r " ++ path.copy.replace(" ", "\\ ")).unixCmd({ |exitcode|
+        (if (File.exists(path)) { "rm -r " ++ path.copy.replace(" ", "\\ ") } { "" }).unixCmd({ |exitcode|
           if (exitcode != 0) {
+            exitcode.postln;
             { this.saveCueFuncs }.defer(0.2);
           } {
             ("mkdir " ++ path.copy.replace(" ", "\\ ")).unixCmd({ |exitcode|
               if (exitcode != 0) {
+                "B".postln;
                 { this.saveCueFuncs }.defer(0.2);
               } {
                 ("cp -r " ++ cueList.defaultfilepath.copy.replace(" ", "\\ ") +/+ "* " ++ path.copy.replace(" ", "\\ ")).unixCmd({ |exitcode|
                   if (exitcode != 0) {
                     this.confirmBox("There was an error");
-                    //{ this.saveCueFuncs }.defer(0.2);
                   } {
                     cueList.filepath = path;
                     cueList.saveCueFuncs;
-                    { action.value }.defer(0.2);
+                    //{ action.value }.defer(0.2);
+                    celebrate.();
                   }
                 }, false);
               };
@@ -406,10 +497,12 @@ CueListView : SCViewHolder {
       }, "Don't save", {
         cueList.filepath = cueList.defaultfilepath;
         cueList.refreshCueFuncs;
+        cueList.currentCueIndex = 0;
       });
     } {
       cueList.filepath = cueList.defaultfilepath;
       cueList.refreshCueFuncs;
+      cueList.currentCueIndex = 0;
     };
   }
 
@@ -496,18 +589,41 @@ CueListView : SCViewHolder {
   }
 
   updateUnsaved {
-    defer {
+    var blendedBackground;
+    var buttonText = gui[\textBox].palette.baseText;
+    var buttonColor = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.1);
+    {
       gui.bottomPanel[\saveButt].states_([[
         gui.bottomPanel[\saveButt].states[0][0],
-        nil,
-        if (cueList.unsavedListChanges) {Color.red} {nil}
+        if (cueList.unsavedListChanges) { nil } { buttonText },
+        if (cueList.unsavedListChanges) {Color(1, 0.3, 0.45)} { buttonColor }
       ]]);
+
+      if (cueList.unsavedListChanges) {
+        blendedBackground = gui[\textBox].palette.base.blend(Color(1, 0, 0.2), 0.05).alpha_(0.97);
+      } {
+        blendedBackground = gui[\textBox].palette.base.alpha_(0.97);
+      };
+      gui[\cueList].background = blendedBackground;
+    }.defer;
+
+    {
       gui.bottomPanel[\updateButt].states_([[
         gui.bottomPanel[\updateButt].states[0][0],
-        nil,
-        if (cueList.unsavedCueChanges) {Color.green} {nil}
-      ]]);
-    };
+        if (cueList.unsavedCueChanges) { nil } { buttonText },
+        if (cueList.unsavedCueChanges) {
+          gui[\textBox].palette.base.blend(Color.green, 0.7)
+        } { buttonColor }
+      ]]).visible_(cueList.unsavedCueChanges);
+
+      if (cueList.unsavedCueChanges) {
+        blendedBackground = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.2).blend(Color.green, 0.2);
+      } {
+        blendedBackground = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.2);
+      };
+      gui[\topBlackPanel].background = blendedBackground;
+      gui[\cueList].hiliteColor = blendedBackground;
+    }.defer;
   }
 
   updateCues {
@@ -515,7 +631,8 @@ CueListView : SCViewHolder {
       gui[\cueList].items_(cueList.cueNames.collect { |name, i|
         i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++ "  " ++ name
       });
-      this.updateCurrentCue(true);
+      gui[\bottomPanel][\backupsButt].visible_((cueList.filepath == cueList.defaultfilepath).not);
+      this.updateCurrentCue;
     };
   }
 
@@ -534,13 +651,35 @@ CueListView : SCViewHolder {
   }
 
   makeStyle {
+    var buttonText = gui[\textBox].palette.baseText;
+    var buttonColor = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.1);
+    var blendedBackground = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.2);
+    var moreBlendedBackground = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.4);
+
     gui[\cueList].palette_(gui[\textBox].palette)
     .background_(gui[\textBox].palette.base.alpha_(0.97))
     .selectedStringColor_(Color.gray(gui[\textBox].palette.baseText.asHSV[2].round))
-    .hiliteColor_(gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.2));
+    .hiliteColor_(blendedBackground);
 
     gui[\topBlackPanel].background_(gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.2));
     gui[\curCue].stringColor_(Color.gray(gui[\textBox].palette.baseText.asHSV[2].round));
+
+    gui[\bottomPanel].do { |thing|
+      if (thing.class == Button) {
+        thing.states_([[thing.states[0][0], buttonText, buttonColor]]);
+      };
+    };
+    gui[\bottomPanel][\background].background = blendedBackground;
+    gui[\bottomPanel][\separator0].background = moreBlendedBackground;
+    //gui[\bottomPanel][\separator1].background = moreBlendedBackground;
+    gui[\bottomPanel][\separator2].background = moreBlendedBackground;
+
+    gui[\bottomPanel][\colorSchemeLabel].stringColor_(buttonText);
+    gui[\bottomPanel][\colorScheme].widget.background_(buttonColor).stringColor_(buttonText);
+
+    gui[\bottomPanel][\leftBackground].background = buttonColor;
+
+    { gui[\bottomPanel][\goButt].font_(Font().size_(20)) }.defer(0.01);
   }
 
   update { |obj, what, thing|
@@ -603,7 +742,9 @@ CueListWindow : SCViewHolder {
     };
 
     completeWindow.toFrontAction = {
-      if (win.visible) { cueListWindow.view.suppressToFront = true; }
+      if (win.isClosed.not) {
+        if (win.visible) { cueListWindow.view.suppressToFront = true; }
+      };
     };
   }
 
