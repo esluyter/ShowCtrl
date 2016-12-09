@@ -29,7 +29,7 @@ CueListView : SCViewHolder {
       .stringColor_(Color.white)
       .resize_(2),
 
-      cueList: ListView(view, Rect(-1, -1, leftPanelWidth - margin + 1, bounds.height - bottomPanelHeight - margin + 1))
+      cueList: ListView(view, Rect(-1, -1, leftPanelWidth + 1, bounds.height - bottomPanelHeight - margin + 1))
       .resize_(4),
 
       textBox: CodeView(textBoxContainer, Rect(-1, 0, bounds.width - leftPanelWidth + 2, bounds.height - 35 - bottomPanelHeight - (5*margin)))
@@ -45,7 +45,8 @@ CueListView : SCViewHolder {
       ))
       .resize_(5),
 
-      resizePanel: View(view, Rect(leftPanelWidth - margin, 0, margin, bounds.height - bottomPanelHeight - margin))
+
+      resizePanel: View(view, Rect(leftPanelWidth - (margin), 0, margin, bounds.height - bottomPanelHeight - margin))
       .background_(Color.gray(0, 0))
       .resize_(4)
       .mouseEnterAction_({ |v, x, y|
@@ -153,14 +154,15 @@ CueListView : SCViewHolder {
     );
 
     gui[\bottomPanel][\colorScheme].view.resize_(7);
+
     gui[\textBox].addDependant(this);
 
     this.makeStyle;
-
     this.font_(Font.monospace.size_(13));
-
     gui[\bottomPanel].keysValuesDo { |k, v| v.font_(Font.sansSerif(12)) };
+
     this.makeInteraction;
+
     gui[\textBox].focus;
   }
 
@@ -560,12 +562,17 @@ CueListView : SCViewHolder {
 
   leftPanelWidth_ { |newLeftPanelWidth|
     var bounds = view.bounds;
-    leftPanelWidth = newLeftPanelWidth.max(margin);
+    leftPanelWidth = max(newLeftPanelWidth, margin);
+
     gui[\topBlackPanel].bounds_(Rect(leftPanelWidth, 0, bounds.width - leftPanelWidth, 46 + (2 * margin)));
+
     gui[\curCue].bounds_(Rect(leftPanelWidth + margin, 2*margin, bounds.width - leftPanelWidth - (3*margin), 35));
-    gui[\cueList].bounds_(Rect(0, 0, leftPanelWidth - margin, bounds.height - bottomPanelHeight - margin));
+
+    gui[\cueList].bounds_(Rect(-1, 0, leftPanelWidth + 1, bounds.height - bottomPanelHeight - margin));
+
     textBoxContainer.bounds_(Rect(leftPanelWidth, 45 + (2 * margin), bounds.width - leftPanelWidth, bounds.height - 35 - bottomPanelHeight - (5*margin)));
-    gui[\resizePanel].bounds_(Rect(leftPanelWidth - margin, 0, margin, bounds.height - bottomPanelHeight - margin));
+
+    gui[\resizePanel].bounds_(gui[\resizePanel].bounds.left_(leftPanelWidth - (margin)));
   }
 
   cueList_ { |newcueList|
@@ -698,7 +705,7 @@ CueListView : SCViewHolder {
 
 
 CueListWindow : SCViewHolder {
-  var <win, <isFront = false, <>toFrontAction, <>endFrontAction, <completeWindow;
+  var <win, <isFront = false, <>toFrontAction, <>endFrontAction, <completeWindow, <postView, <postViewHeight = 200, <resizePanel, dragStart;
 
   *new { |name="", bounds|
     ^super.new.init(name, bounds);
@@ -729,7 +736,7 @@ CueListWindow : SCViewHolder {
 
     this.makeCompleteWindow; // let the complete window bring cue list window to front :)
 
-    this.makePostWindow;
+    { this.makePostView }.defer(0.2);
   }
 
   makeCompleteWindow { |bounds|
@@ -751,20 +758,40 @@ CueListWindow : SCViewHolder {
     };
   }
 
-  makePostWindow { |bounds|
-    var postWin, postView;
+  makePostView {
+    var height = postViewHeight;
+    var bounds = Rect(0, win.bounds.height - height, win.bounds.width, height);
+    postView = PostView(win, bounds).mute_(true).resize_(8);
+    view.bounds_(view.bounds.resizeBy(0, -1 * height + 1));
+    postView.mute_(false);
+    postView.postln("Ready");
 
-    bounds = bounds ?? Rect(0, 0, win.bounds.width, 200);
-    postWin = Window("Post", bounds).background_(Color.clear).front;
+    resizePanel = View(win, Rect(0, bounds.top - (view.margin * 0.7), bounds.width, view.margin * 1.6))
+    .background_(Color.gray(0, 0))
+    .resize_(2)
+    .mouseEnterAction_({ |v, x, y|
+      v.background_(Color.gray(0, 0.3))
+    })
+    .mouseLeaveAction_({ |v|
+      v.background_(Color.gray(0, 0))
+    })
+    .mouseDownAction_({ |v, x, y|
+      dragStart = x@y;
+    })
+    .mouseMoveAction_({ |v, x, y|
+      this.postViewHeight_(dragStart.y - y + postViewHeight);
+    });
+  }
 
-    postView = PostView(postWin, bounds.origin_(0@0)).mute_(true).resize_(5);
+  postViewHeight_ { |newHeight|
+    var height = max(newHeight, 0);
+    var bounds = Rect(0, win.bounds.height - height, win.bounds.width, height);
 
-    {
-      win.bounds_(win.bounds.resizeBy(0, -1 * postWin.bounds.height).moveBy(0, postWin.bounds.height));
-      postView.mute_(false);
-      postView.postln("Ready");
-    }.defer(0.2);
+    resizePanel.bounds = resizePanel.bounds.top_(bounds.top - (view.margin * 0.7));
 
+    postViewHeight = height;
+    postView.bounds_(bounds);
+    view.bounds_(view.bounds.height_(win.bounds.height - height + 1));
   }
 
   cueList_ { |cueList|
@@ -861,21 +888,17 @@ CueListBackupBrowser {
     gui[\cueList] = ListView(win, Rect(0, 210, 200, win.bounds.height - 255))
     .resize_(4);
 
-    gui[\resizePanel] = View(win, Rect(200, 210, 5, win.bounds.height - 255))
-    .background_(Color.gray(0.95, 0.9))
-    .resize_(4);
-
-    gui[\topBlackPanel] = View(win, Rect(205, 210, win.bounds.width - 205, 56))
+    gui[\topBlackPanel] = View(win, Rect(200, 210, win.bounds.width - 200, 56))
     .background_(Color.black)
     .resize_(2);
 
-    gui[\curCue] = StaticText(win, Rect(210, 215, win.bounds.width - 220, 45))
+    gui[\curCue] = StaticText(win, Rect(205, 215, win.bounds.width - 215, 45))
     .stringColor_(Color.white)
     .resize_(2);
 
-    gui[\textBoxContainer] = View(win, Rect(205, 265, win.bounds.width - 205, win.bounds.height - 310)).resize_(5);
+    gui[\textBoxContainer] = View(win, Rect(200, 265, win.bounds.width - 200, win.bounds.height - 310)).resize_(5);
 
-    gui[\textBox] = CodeView(gui[\textBoxContainer], Rect(-1, 0, win.bounds.width - 203, win.bounds.height - 310))
+    gui[\textBox] = CodeView(gui[\textBoxContainer], Rect(-1, 0, win.bounds.width - 198, win.bounds.height - 310))
     .font_(font)
     .editable_(false)
     .resize_(5);
