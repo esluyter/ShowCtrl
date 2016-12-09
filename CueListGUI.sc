@@ -376,6 +376,7 @@ CueListView : SCViewHolder {
     var func = ("{ |thisCueList|\n" ++ gui[\textBox].string ++ "\n}").interpret;
     var restoreBackground = gui[\topBlackPanel].background;
     if (func.isNil) {
+      PostView.postln("ERROR: Compile error. See IDE post window for details.");
       gui[\topBlackPanel].background_(Color.red);
       AppClock.sched(0.1, { gui[\topBlackPanel].background_(restoreBackground); nil });
       AppClock.sched(0.2, { gui[\topBlackPanel].background_(Color.red); nil });
@@ -727,12 +728,14 @@ CueListWindow : SCViewHolder {
     .resize_(5);
 
     this.makeCompleteWindow; // let the complete window bring cue list window to front :)
+
+    this.makePostWindow;
   }
 
-  makeCompleteWindow {
-    var bounds, cueListWindow = this;
+  makeCompleteWindow { |bounds|
+    var cueListWindow = this;
 
-    bounds = Rect(win.bounds.width + view.margin, 0, 500, 300);
+    bounds = bounds ?? Rect(win.bounds.width + view.margin, 0, 500, 300);
     if (completeWindow.notNil) { completeWindow.close };
 
     completeWindow = view.gui[\textBox].makeCompleteWindow(bounds, win);
@@ -746,6 +749,22 @@ CueListWindow : SCViewHolder {
         if (win.visible) { cueListWindow.view.suppressToFront = true; }
       };
     };
+  }
+
+  makePostWindow { |bounds|
+    var postWin, postView;
+
+    bounds = bounds ?? Rect(0, 0, win.bounds.width, 200);
+    postWin = Window("Post", bounds).background_(Color.clear).front;
+
+    postView = PostView(postWin, bounds.origin_(0@0)).mute_(true).resize_(5);
+
+    {
+      win.bounds_(win.bounds.resizeBy(0, -1 * postWin.bounds.height).moveBy(0, postWin.bounds.height));
+      postView.mute_(false);
+      postView.postln("Ready");
+    }.defer(0.2);
+
   }
 
   cueList_ { |cueList|
