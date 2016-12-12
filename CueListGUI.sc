@@ -261,7 +261,11 @@ CueListView : SCViewHolder {
 
 
 
-    gui[\cueList].mouseUpAction_({ |v|
+    gui[\cueList]
+    .mouseDownAction_({ |v, x, y, mod, buttNum, clickCount|
+      if (buttNum == 1) { ShowCtrlContextMenu.create(this, x - 2, y - 2) };
+    })
+    .mouseUpAction_({ |v|
       cueList.currentCueIndex_(v.selection[0]);
       gui[\textBox].focus;
     })
@@ -504,10 +508,10 @@ CueListView : SCViewHolder {
     var restoreBackground = gui[\topBlackPanel].background;
     if (func.isNil) {
       PostView.postln("ERROR: Compile error. See IDE post window for details.");
-      gui[\topBlackPanel].background_(Color.red);
-      AppClock.sched(0.1, { gui[\topBlackPanel].background_(restoreBackground); nil });
-      AppClock.sched(0.2, { gui[\topBlackPanel].background_(Color.red); nil });
-      AppClock.sched(0.3, { gui[\topBlackPanel].background_(restoreBackground); nil });
+      { gui[\topBlackPanel].background_(Color.red) }.defer(0.001);
+      { gui[\topBlackPanel].background_(restoreBackground) }.defer(0.1);
+      { gui[\topBlackPanel].background_(Color.red) }.defer(0.2);
+      { gui[\topBlackPanel].background_(restoreBackground) }.defer(0.3);
     } {
       restoreBackground = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.2);
       {
@@ -521,9 +525,12 @@ CueListView : SCViewHolder {
         nil
       }.defer(0.001);
       {
+        /*
         gui[\topBlackPanel].background = restoreBackground;
         gui[\cueList].hiliteColor = restoreBackground;
         gui[\bottomPanel][\updateButt].visible = false;
+        */
+        this.updateUnsaved;
       }.defer(0.2);
       cueList.currentCueFunc_(func);
     };
@@ -753,8 +760,16 @@ CueListView : SCViewHolder {
         blendedBackground = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.2).blend(Color.green, 0.2);
       } {
         blendedBackground = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.2);
+        if (cueList.notNil) { if (cueList.currentCueColor.notNil) {
+          blendedBackground = blendedBackground.blend(cueList.currentCueColor, 0.2)
+        } };
       };
       gui[\topBlackPanel].background = blendedBackground;
+      gui[\curCue].stringColor_(Color.gray(gui[\textBox].palette.baseText.asHSV[2].round));
+      if (cueList.notNil) { if (cueList.currentCueColor.notNil && cueList.unsavedCueChanges.not) {
+        gui[\topBlackPanel].background = cueList.currentCueColor;
+        gui[\curCue].stringColor_(Color.gray(1 - cueList.currentCueColor.asArray[0..2].mean.round));
+      }};
       gui[\cueList].hiliteColor = blendedBackground;
     }.defer;
   }
@@ -766,6 +781,7 @@ CueListView : SCViewHolder {
       });
       gui[\bottomPanel][\backupsButt].visible_((cueList.filepath == cueList.defaultfilepath).not);
       this.updateCurrentCue;
+      this.updateCueColors;
     };
   }
 
@@ -781,6 +797,12 @@ CueListView : SCViewHolder {
 
       gui[\cueList].selection_([cueList.currentCueIndex]);
     }
+  }
+
+  updateCueColors {
+    gui[\cueList].colors = cueList.cueColors.collect({ |color|
+      if (color.isNil) { Color.clear } { color.copy.alpha_(0.5) }
+    });
   }
 
   makeStyle {
@@ -818,13 +840,14 @@ CueListView : SCViewHolder {
   update { |obj, what, thing|
     switch (what)
     {\cueFuncs} { this.updateCues }
+    {\cueColors} { this.updateCueColors }
     {\unsavedChanges} { this.updateUnsaved }
     {\currentCueIndex} { this.updateCurrentCue }
     {\confirmForceCueIndex} {
       gui[\cueList].selection_([cueList.currentCueIndex]); // reset cuelist
       this.confirmBox("Discard cue edits?", { cueList.currentCueIndex_(thing, true) })
     }
-    {\colorScheme} { this.makeStyle }
+    {\colorScheme} { this.makeStyle; this.updateUnsaved; }
     {\clearPost} { this.changed(\clearPost); };
   }
 }

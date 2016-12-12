@@ -79,6 +79,10 @@ Page #:
     ^cueFuncs[currentCueIndex][\name];
   }
 
+  currentCueColor {
+    ^cueFuncs[currentCueIndex][\color];
+  }
+
   currentCueFunc {
     ^cueFuncs[currentCueIndex][\func];
   }
@@ -101,6 +105,10 @@ Page #:
 
   cueNames {
     ^cueFuncs.collect(_[\name]);
+  }
+
+  cueColors {
+    ^cueFuncs.collect(_[\color]);
   }
 
   saveCueFuncs {
@@ -139,6 +147,13 @@ Page #:
     if (name != cueFuncs[currentCueIndex][\name]) { unsavedListChanges = true };
     cueFuncs[currentCueIndex][\name] = name;
     this.changed(\cueFuncs);
+    this.changed(\unsavedChanges);
+  }
+
+  currentCueColor_ { |color|
+    if (color != cueFuncs[currentCueIndex][\color]) { unsavedListChanges = true };
+    cueFuncs[currentCueIndex][\color] = color;
+    this.changed(\cueColors);
     this.changed(\unsavedChanges);
   }
 
