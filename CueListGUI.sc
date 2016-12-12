@@ -29,7 +29,7 @@ CueListView : SCViewHolder {
       .stringColor_(Color.white)
       .resize_(2),
 
-      cueList: ListView(view, Rect(-1, -1, leftPanelWidth + 1, bounds.height - bottomPanelHeight - margin + 1))
+      cueList: ListView(view, Rect(-1, -1, leftPanelWidth + 2, bounds.height - bottomPanelHeight - margin + 1))
       .resize_(4),
 
       textBox: CodeView(textBoxContainer, Rect(-1, 0, bounds.width - leftPanelWidth + 2, bounds.height - 35 - bottomPanelHeight - (5*margin)))
@@ -148,7 +148,12 @@ CueListView : SCViewHolder {
           "One Light" -> { gui[\textBox].oneLightColorScheme },
           "Paper Light" -> { gui[\textBox].lightColorScheme },
           "Bright Dark" -> { gui[\textBox].darkColorScheme }
-        ])
+        ]),
+
+        keyBindingsButt: Button(view, Rect((7.9*buttonWidth) + (7*margin) - 24, bounds.height - (bottomPanelHeight/2) - 3, buttonWidth * 1.4, bottomPanelHeight / 2 - margin).postln)
+        .states_([["Keybindings"]])
+        .action_({ this.makeKeyBindingsWindow })
+        .resize_(7);
 
       )
     );
@@ -352,6 +357,126 @@ CueListView : SCViewHolder {
     .action_({ action.value(field.string); win.close });
     Button(win, Rect(205, 90, 185, 30)).states_([["Cancel"]])
     .action_({ win.close });
+  }
+
+  makeKeyBindingsWindow {
+    var background = gui[\textBox].palette.base.copy.alpha_(0.9);
+    var text = gui[\textBox].palette.baseText;
+    var headingtext = Color.hsv(text.asHSV[0], text.asHSV[1], (text.asHSV[2].round(1.0) + text.asHSV[2]) / 2);
+
+    var makeKeyBindingItem = { |parent, top, key, binding, backgroundColor, font|
+      var bounds = Rect(0, top, parent.bounds.width, 20);
+      var view = View(parent, bounds).background_(backgroundColor).resize_(2);
+      font = font ?? Font().size_(12);
+
+      StaticText(view, Rect(10, 0, 70, 20))
+      .string_(key)
+      .font_(font)
+      .stringColor_(text);
+      StaticText(view, Rect(85, 0, parent.bounds.width - 100, 20))
+      .string_(binding)
+      .font_(font)
+      .stringColor_(text)
+      .resize_(2);
+
+      view;
+    };
+
+    var makeHeading = { |parent, top, heading, font|
+      var bounds = Rect(0, top, parent.bounds.width, 20);
+      var view = View(parent, bounds).resize_(2);
+      font = font ?? Font().size_(12).bold_(true);
+
+      StaticText(view, Rect(10, 0, parent.bounds.width - 30, 20))
+      .string_(heading)
+      .font_(font)
+      .stringColor_(headingtext)
+      .resize_(2);
+
+      view;
+    };
+
+    var addSection = { |heading, items|
+      var toggle = false;
+
+      runningTop = runningTop + 10;
+      makeHeading.(z, runningTop, heading);
+      runningTop = runningTop + 20;
+
+      items.pairsDo { |key, binding|
+        makeKeyBindingItem.(z, runningTop, key, binding, (if (toggle) { toggle = false; Color.gray(0, 0.1) } { toggle = true; Color.clear }));
+        runningTop = runningTop + 20;
+      };
+    };
+
+    var runningTop = 0;
+
+    var z = Window("Keybindings").front;
+
+    z.bounds = z.bounds.insetBy(0, -100);
+    z.background = Color.clear;
+
+    z = ScrollView(z, z.bounds.origin_(0@0).insetBy(-2, -2)).resize_(5)
+    .background_(background);
+
+    StaticText(z, Rect(10, 0, z.bounds.width, 40))
+    .string_("Keybindings List")
+    .font_(Font().size_(30))
+    .stringColor_(headingtext);
+
+    runningTop = 40;
+
+    addSection.("File operations", [
+      "⌘N", "New cue list",
+      "⌘O", "Open cue list...",
+      "⌘S", "Save cue list (prompt for location on first save)",
+    ]);
+
+    addSection.("Cue list operations", [
+      "⌥↑", "Go up in cue list",
+      "⌥↓", "Go down in cue list",
+      "⌥Space", "Execute current cue",
+      "⌥⌘↑", "Add cue above current cue",
+      "⌥⌘↓", "Add cue below current cue",
+      "⇧⌘↑", "Move current cue up in cue list",
+      "⇧⌘↓", "Move current cue down in cue list",
+      "⌘R", "Rename current cue",
+      "⌘⌫", "Delete current cue",
+      "⌘G", "Go to cue number"
+    ]);
+
+    addSection.("SuperCollider operations", [
+      "⇧⏎", "Execute current line or selection",
+      "⌘⏎", "Execute current region or selection",
+      "⌘B", "Boot default server",
+      "⇧⌘B", "Reboot default server",
+      "⌘K", "Quit default server",
+      "⇧⌘L", "Recompile class library",
+      "⇧⌘P", "Clear Post window"
+    ]);
+
+
+    addSection.("SuperCollider GUI", [
+      "⌘M", "Show input and output meters",
+      "⇧⌘M", "Show oscilloscope",
+      "⌥⌘M", "Show frequency scope",
+      "⌥⌘T", "Show server node tree",
+    ]);
+
+    addSection.("Code view operations", [
+      "⇥", "Indent current line or selected lines",
+      "⇧⇥", "De-indent current line or selected lines",
+      "⌘Z", "Undo",
+      "⌘Y", "Redo",
+    ]);
+
+    addSection.("Autocomplete operations", [
+      "⌘↑", "Select previous autocompletion suggestion",
+      "⌘↓", "Select next autocompletion suggestion",
+      "⌘→, ⌘←,", "Accept selected autocompletion",
+      "⇧Space", "",
+
+    ]);
   }
 
   renameCue {
@@ -568,7 +693,7 @@ CueListView : SCViewHolder {
 
     gui[\curCue].bounds_(Rect(leftPanelWidth + margin, 2*margin, bounds.width - leftPanelWidth - (3*margin), 35));
 
-    gui[\cueList].bounds_(Rect(-1, 0, leftPanelWidth + 1, bounds.height - bottomPanelHeight - margin));
+    gui[\cueList].bounds_(Rect(-1, 0, leftPanelWidth + 2, bounds.height - bottomPanelHeight - margin));
 
     textBoxContainer.bounds_(Rect(leftPanelWidth, 45 + (2 * margin), bounds.width - leftPanelWidth, bounds.height - 35 - bottomPanelHeight - (5*margin)));
 
@@ -699,13 +824,14 @@ CueListView : SCViewHolder {
       gui[\cueList].selection_([cueList.currentCueIndex]); // reset cuelist
       this.confirmBox("Discard cue edits?", { cueList.currentCueIndex_(thing, true) })
     }
-    {\colorScheme} { this.makeStyle };
+    {\colorScheme} { this.makeStyle }
+    {\clearPost} { this.changed(\clearPost); };
   }
 }
 
 
 CueListWindow : SCViewHolder {
-  var <win, <isFront = false, <>toFrontAction, <>endFrontAction, <completeWindow, <postView, <postViewHeight = 125, <resizePanel, dragStart;
+  var <win, <isFront = false, <>toFrontAction, <>endFrontAction, <completeWindow, <postView, <postViewContainer, <postViewHeight = 125, <resizePanel, dragStart;
 
   *new { |name="", bounds|
     ^super.new.init(name, bounds);
@@ -734,6 +860,8 @@ CueListWindow : SCViewHolder {
     .parentWindow_(this.win)
     .resize_(5);
 
+    view.addDependant(this);
+
     this.makeCompleteWindow; // let the complete window bring cue list window to front :)
 
     { this.makePostView }.defer(0.2);
@@ -761,7 +889,10 @@ CueListWindow : SCViewHolder {
   makePostView {
     var height = postViewHeight;
     var bounds = Rect(0, win.bounds.height - height, win.bounds.width, height);
-    postView = PostView(win, bounds).mute_(true).resize_(8);
+
+    postViewContainer = View(win, bounds).resize_(8);
+
+    postView = PostView(postViewContainer, bounds.copy.origin_(0@0).insetBy(-1)).mute_(true).resize_(5);
     view.bounds_(view.bounds.resizeBy(0, -1 * height + 1));
     postView.mute_(false);
     postView.postln("Ready");
@@ -790,7 +921,7 @@ CueListWindow : SCViewHolder {
     resizePanel.bounds = resizePanel.bounds.top_(bounds.top - (view.margin * 0.7));
 
     postViewHeight = height;
-    postView.bounds_(bounds);
+    postViewContainer.bounds_(bounds);
     view.bounds_(view.bounds.height_(win.bounds.height - height + 1));
   }
 
@@ -811,9 +942,14 @@ CueListWindow : SCViewHolder {
     view.font_(afont);
   }
 
+  clearPost {
+    postView.clear;
+  }
+
   update { |obj, what|
     switch (what)
-    {\filepath} { win.name_(view.cueList.filepath) };
+    {\filepath} { win.name_(view.cueList.filepath) }
+    {\clearPost} { this.clearPost }
   }
 }
 
