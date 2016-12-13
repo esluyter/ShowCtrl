@@ -1107,6 +1107,11 @@ CueListBackupBrowser {
       selectedfuncs = cuefuncs;
 
       gui[\cueList].items = cuefuncs.collect(_.name);
+      gui[\cueList].colors = cuefuncs.collect({ |cue|
+        var color = cue.color;
+        if (color.isNil) { Color.clear } { color.copy.alpha_(0.5) }
+      });
+
       gui[\cueList].action = { |view|
         selectedfunc = cuefuncs[view.value];
 
