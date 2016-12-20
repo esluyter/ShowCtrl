@@ -856,11 +856,11 @@ CueListView : SCViewHolder {
 CueListWindow : SCViewHolder {
   var <win, <isFront = false, <>toFrontAction, <>endFrontAction, <completeWindow, <postView, <postViewContainer, <postViewHeight = 125, <resizePanel, dragStart;
 
-  *new { |name="", bounds|
-    ^super.new.init(name, bounds);
+  *new { |name="", bounds, action|
+    ^super.new.init(name, bounds, action);
   }
 
-  init { |name, bounds|
+  init { |name, bounds, action|
     win = Window(name, bounds)
     .background_(Color.clear)
     .acceptsMouseOver_(true)
@@ -887,7 +887,7 @@ CueListWindow : SCViewHolder {
 
     this.makeCompleteWindow; // let the complete window bring cue list window to front :)
 
-    { this.makePostView }.defer(0.2);
+    { this.makePostView; action.value }.defer(0.2); // call action on post view complete
   }
 
   makeCompleteWindow { |bounds|
@@ -963,6 +963,14 @@ CueListWindow : SCViewHolder {
 
   font_ { |afont|
     view.font_(afont);
+  }
+
+  gui {
+    ^view.gui;
+  }
+
+  textBox {
+    ^view.gui[\textBox];
   }
 
   clearPost {

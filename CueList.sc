@@ -209,9 +209,9 @@ Page #:
     this.changed(\currentCueIndex);
   }
 
-  makeWindow { |bounds|
+  makeWindow { |bounds, action|
     bounds = bounds ?? Window.screenBounds.width_(800);
-    ^CueListWindow(filepath, bounds).cueList_(this);
+    ^CueListWindow(filepath, bounds, action).cueList_(this);
   }
 
   filepath_ { |newfilepath|
