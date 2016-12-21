@@ -6,6 +6,7 @@ CueList {
   var <unsavedCueChanges = false;
   var <unsavedListChanges = false;
   var <defaultfilepath;
+  var <>incrementCueOnFire = true, <>incrementCueOnError = true;
 
   var <>preExecuteHook, <>postExecuteHook;
 
@@ -45,14 +46,26 @@ Page #:
     var func = this.currentCueFunc;
     var name = this.currentCueName;
     var index = this.currentCueIndex;
+    var retval = true;
 
-    preExecuteHook.(this, index, name, func);
-    func.(this);
-    postExecuteHook.(this, index, name, func);
-
+    try {
+      preExecuteHook.(this, index, name, func);
+      func.(this);
+      postExecuteHook.(this, index, name, func);
+    } { |error|
+      error.reportError;
+      if (incrementCueOnError) {
+        "ERROR: Error executing cue! Moved on to the next one to save the show.".postln;
+        retval = false; // delay returning until the index has incremented.
+      } {
+        "ERROR: Error executing cue! Stopped in place.".postln;
+        ^false;
+      }
+    };
 
     lastExecutedCue = name;
     if (this.currentCueIndex == index) { this.incrementCueIndex() };
+    ^retval;
   }
 
   incrementCueIndex { |force = false|

@@ -182,8 +182,7 @@ CueListView : SCViewHolder {
         ^true;
       };
       if (keycode == 49) { //space
-        cueList.executeCurrentCue;
-        ^true;
+        ^cueList.executeCurrentCue;
       };
     };
 
