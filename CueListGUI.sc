@@ -4,6 +4,7 @@ CueListView : SCViewHolder {
   var dragStart, savedSelection;
   var <>parentWindow, <suppressEndFront = false, <>suppressToFront = false;
   var textBoxContainer;
+  var <>deletesConfirmed = 0;
 
   *new { |parent, bounds|
     ^super.new.init(parent, bounds);
@@ -144,10 +145,10 @@ CueListView : SCViewHolder {
         .resize_(7),
 
         colorScheme: EZPopUpMenu(view, Rect((5.9*buttonWidth) + (5*margin) - 24, bounds.height - (bottomPanelHeight/2) - 3, buttonWidth * 2, bottomPanelHeight / 2 - margin), nil, [
-          "One Dark" -> { gui[\textBox].oneDarkColorScheme },
-          "One Light" -> { gui[\textBox].oneLightColorScheme },
-          "Paper Light" -> { gui[\textBox].lightColorScheme },
-          "Bright Dark" -> { gui[\textBox].darkColorScheme }
+          'One Dark' -> { gui[\textBox].oneDarkColorScheme },
+          'One Light' -> { gui[\textBox].oneLightColorScheme },
+          'Paper Light' -> { gui[\textBox].paperLightColorScheme },
+          'Bright Dark' -> { gui[\textBox].brightDarkColorScheme }
         ]),
 
         keyBindingsButt: Button(view, Rect((7.9*buttonWidth) + (7*margin) - 24, bounds.height - (bottomPanelHeight/2) - 3, buttonWidth * 1.4, bottomPanelHeight / 2 - margin).postln)
@@ -172,12 +173,28 @@ CueListView : SCViewHolder {
   }
 
   handleKey { |view, chr, mod, uni, keycode, key|
-    if (mod.isAlt && mod.isCmd.not) {
+    if (mod.isAlt) {
       if (keycode == 125) { // down
+        if (mod.isCtrl || mod.isCmd) {
+          this.addCueBelow(mod.isShift.not);
+          ^true;
+        };
+        if (mod.isShift) {
+          this.moveCurrentCueDown;
+          ^true;
+        };
         cueList.incrementCueIndex;
         ^true;
       };
       if (keycode == 126) { // up
+        if (mod.isCtrl) {
+          this.addCueAbove(mod.isShift.not);
+          ^true;
+        };
+        if (mod.isShift) {
+          this.moveCurrentCueUp;
+          ^true;
+        };
         cueList.decrementCueIndex;
         ^true;
       };
@@ -218,24 +235,9 @@ CueListView : SCViewHolder {
         this.gotoCue;
         ^true;
       };
+
       if (keycode == 51) { // delete
-        this.deleteCue;
-        ^true;
-      };
-      if (keycode == 126) { // up
-        if (mod.isAlt) {
-          this.addCueAbove;
-        } {
-          this.moveCurrentCueUp;
-        };
-        ^true;
-      };
-      if (keycode == 125) { // down
-        if (mod.isAlt) {
-          this.addCueBelow;
-        } {
-          this.moveCurrentCueDown;
-        };
+        this.deleteCue(mod.isShift);
         ^true;
       };
     };
@@ -431,21 +433,22 @@ CueListView : SCViewHolder {
 
     addSection.("File operations", [
       "⌘N", "New cue list",
-      "⌘O", "Open cue list...",
+      "⌘O", "Open cue list (prompt for folder)",
       "⌘S", "Save cue list (prompt for location on first save)",
     ]);
 
     addSection.("Cue list operations", [
       "⌥↑", "Go up in cue list",
+      "⇧⌥↑", "Move current cue up in cue list",
       "⌥↓", "Go down in cue list",
+      "⇧⌥↓", "Move current cue down in cue list",
       "⌥Space", "Execute current cue",
-      "⌥⌘↑", "Add cue above current cue",
-      "⌥⌘↓", "Add cue below current cue",
-      "⇧⌘↑", "Move current cue up in cue list",
-      "⇧⌘↓", "Move current cue down in cue list",
+      "⌥⌘↑", "Add cue above current cue (shift - without prompt)",
+      "⌥⌘↓", "Add cue below current cue (shift - without prompt)",
       "⌘R", "Rename current cue",
-      "⌘⌫", "Delete current cue",
-      "⌘G", "Go to cue number"
+      "⌘⌫", "Delete current cue (shift - without prompt)",
+      "⌘G", "Go to cue number",
+      "^U", "Update current cue function without saving to disk"
     ]);
 
     addSection.("SuperCollider operations", [
@@ -487,6 +490,8 @@ CueListView : SCViewHolder {
     var action = { |string|
       cueList.currentCueName = string.asSymbol;
     };
+
+    oldname = if (oldname == '--') { '' } { oldname };
     this.dialogBox("Cue name", action, oldname);
   }
 
@@ -497,9 +502,17 @@ CueListView : SCViewHolder {
     this.dialogBox("Go to cue #", action);
   }
 
-  deleteCue {
-    var action = { cueList.deleteCurrentCue };
-    this.confirmBox("Are you sure?", action);
+  deleteCue { |force = false|
+    var action = {
+      deletesConfirmed = deletesConfirmed + 1;
+      cueList.deleteCurrentCue;
+      cueList.decrementCueIndex;
+    };
+    if (force.not) {
+      this.confirmBox("Are you sure?", action);
+    } {
+      action.();
+    };
   }
 
   saveCue {
@@ -662,21 +675,29 @@ CueListView : SCViewHolder {
     cueList.moveCurrentCueUp;
   }
 
-  addCueAbove {
+  addCueAbove { |prompt = false|
     var action = { |string|
       cueList.addCueBeforeCurrent(string);
     };
     if (cueList.unsavedCueChanges) {
       this.confirmBox("Discard cue edits?", {
         cueList.unsavedCueChanges = false;
-        this.dialogBox("New cue before", action);
+        if (prompt.not) {
+          action.("--");
+        } {
+          this.dialogBox("New cue before", action);
+        };
       });
       ^nil;
     };
-    this.dialogBox("New cue before", action);
+    if (prompt.not) {
+      action.("--");
+    } {
+      this.dialogBox("New cue before", action);
+    };
   }
 
-  addCueBelow {
+  addCueBelow { |prompt = false|
     var action = { |string|
       cueList.addCueAfterCurrent(string);
       cueList.incrementCueIndex;
@@ -684,11 +705,19 @@ CueListView : SCViewHolder {
     if (cueList.unsavedCueChanges) {
       this.confirmBox("Discard cue edits?", {
         cueList.unsavedCueChanges = false;
-        this.dialogBox("New cue after", action);
+        if (prompt.not) {
+          action.("--");
+        } {
+          this.dialogBox("New cue after", action);
+        };
       });
       ^nil;
     };
-    this.dialogBox("New cue after", action);
+    if (prompt.not) {
+      action.("--");
+    } {
+      this.dialogBox("New cue after", action);
+    };
   }
 
   leftPanelWidth_ { |newLeftPanelWidth|
@@ -954,6 +983,18 @@ CueListWindow : SCViewHolder {
 
   cueList {
     ^view.cueList;
+  }
+
+  colorScheme {
+    var menu = view.gui.bottomPanel.colorScheme;
+    ^menu.items[menu.value].key;
+  }
+
+  colorScheme_ { |name|
+    var menu = view.gui.bottomPanel.colorScheme;
+    menu.items.detect({ |item| item.key == name.asSymbol }).value.();
+    menu.value = menu.items.detectIndex({ |item| item.key == name.asSymbol });
+    ^this;
   }
 
   font {

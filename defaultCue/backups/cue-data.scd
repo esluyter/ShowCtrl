@@ -1,3 +1,3 @@
-[ ( 'name': "Init", 'func': { |thisCueList|
+[ ( 'name': "", 'func': { |thisCueList|
 
 } ) ]

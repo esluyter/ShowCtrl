@@ -1,14 +1,20 @@
-[ ( 'name': "Init", 'func': { |thisCueList|
-// Initial settings
-} ), ( 'name': "Preset", 'func': { |thisCueList|
+[ ( 'name': 'Init', 'func': { |thisCueList|
 /*
 
-Cue on: Preset
-Page #: 0
+Initialize resources, environment variables, etc.
 
 */
 
-} ), ( 'name': "...", 'func': { |thisCueList|
+} ), ( 'name': 'Cleanup', 'func': { |thisCueList|
+/*
+
+Free resources
+
+*/
+
+} ), ( 'name': '', 'func': { |thisCueList|
+
+} ), ( 'name': 'default new cue function', 'func': { |thisCueList|
 /*
 
 Cue on:
@@ -16,6 +22,4 @@ Page #:
 
 */
 
-} ), ( 'name': "Cleanup", 'func': { |thisCueList|
-// Free resources
 } ) ]

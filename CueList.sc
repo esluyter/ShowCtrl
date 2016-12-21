@@ -112,8 +112,10 @@ Page #:
     cueFuncs.do { |cue, i|
       if (cue[\name].asSymbol == name.asSymbol) {
         this.currentCueIndex_(i);
+        ^true;
       };
     };
+    ^false;
   }
 
   cueNames {
@@ -158,7 +160,7 @@ Page #:
 
   currentCueName_ { |name|
     if (name != cueFuncs[currentCueIndex][\name]) { unsavedListChanges = true };
-    cueFuncs[currentCueIndex][\name] = name;
+    cueFuncs[currentCueIndex][\name] = name.asSymbol;
     this.changed(\cueFuncs);
     this.changed(\unsavedChanges);
   }
@@ -199,11 +201,15 @@ Page #:
   }
 
   addEmptyCue { |index, name|
-    this.addCue(index, name, defaultFunc);
+    var funcCue = cueFuncs.detect({ |cue|
+      cue.name == "default new cue function"
+    });
+    var func = if (funcCue.isNil) { defaultFunc } { funcCue[\func] };
+    this.addCue(index, name, func);
   }
 
   addCue { |index, name, func|
-    cueFuncs = cueFuncs.insert(index, (name: name, func: func));
+    cueFuncs = cueFuncs.insert(index, (name: name.asSymbol, func: func));
     unsavedListChanges = true;
     this.changed(\cueFuncs);
     this.changed(\unsavedChanges);
