@@ -175,11 +175,18 @@ CueListView : SCViewHolder {
 
   handleKey { |view, chr, mod, uni, keycode, key|
     if (mod.isAlt) {
+      //keycode.postln;
       if (keycode == 123) { // left
         cueList.currentCueLevel = (cueList.currentCueLevel - 1).max(0);
       };
       if (keycode == 124) { // right
         cueList.currentCueLevel = (cueList.currentCueLevel + 1);
+      };
+      if (keycode == 121) { // pg down
+        cueList.incrementCueIndexByLevel;
+      };
+      if (keycode == 116) { // pg up
+        cueList.decrementCueIndexByLevel;
       };
       if (keycode == 125) { // down
         if (mod.isCtrl || mod.isCmd) {
@@ -860,7 +867,7 @@ CueListView : SCViewHolder {
           if (thisRegionIsUncollapsed) {
             var expanded = (cueFuncs[i + 1 % cueFuncs.size][\level] ?? 0) > level;
             cueListMap = cueListMap.add(i);
-            items = items.add(i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++ "  ".dup(level).join ++ if (expanded) { " - " } { "   " } ++ name);
+            items = items.add(i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++ " |".dup(level).join ++ if (expanded) { " - " } { "   " } ++ name);
           };
         };
       };

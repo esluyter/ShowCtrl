@@ -72,8 +72,26 @@ Page #:
     this.currentCueIndex_(currentCueIndex + 1, force);
   }
 
+  incrementCueIndexByLevel { |force = false|
+    var level = this.currentCueLevel;
+    var j = currentCueIndex + 1 % cueFuncs.size;
+
+    while ({ (cueFuncs[j][\level] ?? 0) != level }) { j = j + 1 % cueFuncs.size };
+
+    this.currentCueIndex_(j);
+  }
+
   decrementCueIndex { |force = false|
     this.currentCueIndex_(currentCueIndex - 1, force);
+  }
+
+  decrementCueIndexByLevel { |force = false|
+    var level = this.currentCueLevel;
+    var j = currentCueIndex - 1 % cueFuncs.size;
+
+    while ({ (cueFuncs[j][\level] ?? 0) != level }) { j = j - 1 % cueFuncs.size };
+
+    this.currentCueIndex_(j);
   }
 
   currentCueIndex_ { |newindex, force = false|
