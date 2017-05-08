@@ -100,6 +100,10 @@ Page #:
     ^cueFuncs[currentCueIndex][\func];
   }
 
+  currentCueLevel {
+    ^(cueFuncs[currentCueIndex][\level] ?? 0)
+  }
+
   nextCueName {
     ^cueFuncs[currentCueIndex + 1 % cueFuncs.size][\name];
   }
@@ -169,6 +173,13 @@ Page #:
     if (color != cueFuncs[currentCueIndex][\color]) { unsavedListChanges = true };
     cueFuncs[currentCueIndex][\color] = color;
     this.changed(\cueColors);
+    this.changed(\unsavedChanges);
+  }
+
+  currentCueLevel_ { |level|
+    if (level != cueFuncs[currentCueIndex][\level]) { unsavedListChanges = true };
+    cueFuncs[currentCueIndex][\level] = level;
+    this.changed(\cueLevels);
     this.changed(\unsavedChanges);
   }
 

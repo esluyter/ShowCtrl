@@ -174,6 +174,12 @@ CueListView : SCViewHolder {
 
   handleKey { |view, chr, mod, uni, keycode, key|
     if (mod.isAlt) {
+      if (keycode == 123) { // left
+        cueList.currentCueLevel = (cueList.currentCueLevel - 1).max(0);
+      };
+      if (keycode == 124) { // right
+        cueList.currentCueLevel = (cueList.currentCueLevel + 1);
+      };
       if (keycode == 125) { // down
         if (mod.isCtrl || mod.isCmd) {
           this.addCueBelow(mod.isShift.not);
@@ -804,8 +810,10 @@ CueListView : SCViewHolder {
 
   updateCues {
     defer {
-      gui[\cueList].items_(cueList.cueNames.collect { |name, i|
-        i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++ "  " ++ name
+      gui[\cueList].items_(cueList.cueFuncs.collect { |arr, i|
+        var name = arr[\name];
+        var level = arr[\level] ?? 0;
+        i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++ "  " ++ "  ".dup(level).join ++ name
       });
       gui[\bottomPanel][\backupsButt].visible_((cueList.filepath == cueList.defaultfilepath).not);
       this.updateCurrentCue;
@@ -868,6 +876,7 @@ CueListView : SCViewHolder {
   update { |obj, what, thing|
     switch (what)
     {\cueFuncs} { this.updateCues }
+    {\cueLevels} { this.updateCues }
     {\cueColors} { this.updateCueColors }
     {\unsavedChanges} { this.updateUnsaved }
     {\currentCueIndex} { this.updateCurrentCue }
