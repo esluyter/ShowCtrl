@@ -5,6 +5,7 @@ CueListView : SCViewHolder {
   var <>parentWindow, <suppressEndFront = false, <>suppressToFront = false;
   var textBoxContainer;
   var <>deletesConfirmed = 0;
+  var cueListMap; // will be a map of cue list items to cue index (for cue folding)
 
   *new { |parent, bounds|
     ^super.new.init(parent, bounds);
@@ -273,7 +274,7 @@ CueListView : SCViewHolder {
       if (buttNum == 1) { ShowCtrlContextMenu.create(this, x - 2, y - 2) };
     })
     .mouseUpAction_({ |v|
-      cueList.currentCueIndex_(v.selection[0]);
+      cueList.currentCueIndex_(cueListMap[v.selection[0]]);
       gui[\textBox].focus;
     })
     .keyDownAction_({ |view, chr, mod, uni, keycode, key|
@@ -448,6 +449,8 @@ CueListView : SCViewHolder {
       "⇧⌥↑", "Move current cue up in cue list",
       "⌥↓", "Go down in cue list",
       "⇧⌥↓", "Move current cue down in cue list",
+      "⌥→", "Move cue up a level",
+      "⌥←", "Move cue down a level",
       "⌥Space", "Execute current cue",
       "⌥⌘↑", "Add cue above current cue (shift - without prompt)",
       "⌥⌘↓", "Add cue below current cue (shift - without prompt)",
@@ -810,11 +813,59 @@ CueListView : SCViewHolder {
 
   updateCues {
     defer {
-      gui[\cueList].items_(cueList.cueFuncs.collect { |arr, i|
+      var items = [];
+      var cueFuncs = cueList.cueFuncs;
+      var curIndex = cueList.currentCueIndex;
+      var collapseLevel = 0;
+
+      cueListMap = [];
+
+      cueFuncs.do { |arr, i|
         var name = arr[\name];
         var level = arr[\level] ?? 0;
-        i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++ "  " ++ "  ".dup(level).join ++ name
-      });
+        var prevCollapseLevelIndex = nil;
+        var nextCollapseLevelIndex = nil;
+        var thisRegionIsUncollapsed = false;
+        var j = i;
+
+        while ({ prevCollapseLevelIndex.isNil }) {
+          if ((cueFuncs[j][\level] ?? 0) <= collapseLevel) {
+            prevCollapseLevelIndex = j;
+          } {
+            if (j > 0) { j = j - 1 } { prevCollapseLevelIndex = -1 }
+          };
+        };
+        j = i + 1;
+        while ({ nextCollapseLevelIndex.isNil }) {
+          if (j >= cueFuncs.size) {
+            nextCollapseLevelIndex = cueFuncs.size
+          } {
+            if ((cueFuncs[j][\level] ?? 0) <= collapseLevel) {
+              nextCollapseLevelIndex = j;
+            } {
+              if (j < (cueFuncs.size - 1)) { j = j + 1 };
+            };
+          };
+        };
+
+        if ((curIndex >= prevCollapseLevelIndex) && (curIndex < nextCollapseLevelIndex)) {
+          thisRegionIsUncollapsed = true;
+        };
+
+        if (level <= collapseLevel) {
+          var collapsed = (cueFuncs[i + 1 % cueFuncs.size][\level] ?? 0) > collapseLevel;
+          cueListMap = cueListMap.add(i);
+          items = items.add(i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++ if (collapsed) { if (thisRegionIsUncollapsed) { " - " } { " + " } } { "   " } ++ "  ".dup(level).join ++ name);
+        } {
+          if (thisRegionIsUncollapsed) {
+            var expanded = (cueFuncs[i + 1 % cueFuncs.size][\level] ?? 0) > level;
+            cueListMap = cueListMap.add(i);
+            items = items.add(i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++ "  ".dup(level).join ++ if (expanded) { " - " } { "   " } ++ name);
+          };
+        };
+      };
+
+      gui[\cueList].items_(items);
       gui[\bottomPanel][\backupsButt].visible_((cueList.filepath == cueList.defaultfilepath).not);
       this.updateCurrentCue;
       this.updateCueColors;
@@ -831,12 +882,14 @@ CueListView : SCViewHolder {
       gui[\textBox].string_(str);
       gui[\textBox].select((gui[\textBox].string.find("*/") ?? -3) + 3, 0);
 
-      gui[\cueList].selection_([cueList.currentCueIndex]);
+      gui[\cueList].selection_([cueListMap.indexOf(cueList.currentCueIndex)]);
     }
   }
 
   updateCueColors {
-    gui[\cueList].colors = cueList.cueColors.collect({ |color|
+    var cueColors = cueList.cueColors;
+    gui[\cueList].colors = cueListMap.collect({ |n|
+      var color = cueColors[n];
       if (color.isNil) { Color.clear } { color.copy.alpha_(0.5) }
     });
   }
@@ -879,7 +932,7 @@ CueListView : SCViewHolder {
     {\cueLevels} { this.updateCues }
     {\cueColors} { this.updateCueColors }
     {\unsavedChanges} { this.updateUnsaved }
-    {\currentCueIndex} { this.updateCurrentCue }
+    {\currentCueIndex} { this.updateCurrentCue; this.updateCues }
     {\confirmForceCueIndex} {
       gui[\cueList].selection_([cueList.currentCueIndex]); // reset cuelist
       this.confirmBox("Discard cue edits?", { cueList.currentCueIndex_(thing, true) })

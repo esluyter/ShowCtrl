@@ -108,6 +108,10 @@ Page #:
     ^cueFuncs[currentCueIndex + 1 % cueFuncs.size][\name];
   }
 
+  nextCueLevel {
+    ^(cueFuncs[currentCueIndex + 1 % cueFuncs.size][\level] ?? 0)
+  }
+
   prevCueName {
     ^cueFuncs[currentCueIndex - 1 % cueFuncs.size][\name];
   }
@@ -188,8 +192,10 @@ Page #:
     var newIndex = if (index == 0) { 0 } { index - 1 };
     var func = this.currentCueFunc;
     var name = this.currentCueName;
+    var level = this.currentCueLevel;
+    var color = this.currentCueColor;
     this.deleteCurrentCue;
-    this.addCue(newIndex, name, func);
+    this.addCue(newIndex, name, func, color, level);
     this.currentCueIndex_(newIndex);
   }
 
@@ -198,8 +204,10 @@ Page #:
     var newIndex = if (index == (cueFuncs.size - 1)) { index } { index + 1 };
     var func = this.currentCueFunc;
     var name = this.currentCueName;
+    var level = this.currentCueLevel;
+    var color = this.currentCueColor;
     this.deleteCurrentCue;
-    this.addCue(newIndex, name, func);
+    this.addCue(newIndex, name, func, color, level);
     this.currentCueIndex_(newIndex);
   }
 
@@ -219,8 +227,8 @@ Page #:
     this.addCue(index, name, func);
   }
 
-  addCue { |index, name, func|
-    cueFuncs = cueFuncs.insert(index, (name: name.asSymbol, func: func));
+  addCue { |index, name, func, color, level|
+    cueFuncs = cueFuncs.insert(index, (name: name.asSymbol, func: func, color: color, level: level));
     unsavedListChanges = true;
     this.changed(\cueFuncs);
     this.changed(\unsavedChanges);
