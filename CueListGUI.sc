@@ -178,15 +178,19 @@ CueListView : SCViewHolder {
       //keycode.postln;
       if (keycode == 123) { // left
         cueList.currentCueLevel = (cueList.currentCueLevel - 1).max(0);
+        ^true;
       };
       if (keycode == 124) { // right
         cueList.currentCueLevel = (cueList.currentCueLevel + 1);
+        ^true;
       };
       if (keycode == 121) { // pg down
         cueList.incrementCueIndexByLevel;
+        ^true;
       };
       if (keycode == 116) { // pg up
         cueList.decrementCueIndexByLevel;
+        ^true;
       };
       if (keycode == 125) { // down
         if (mod.isCtrl || mod.isCmd) {
