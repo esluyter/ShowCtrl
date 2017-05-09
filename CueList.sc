@@ -73,7 +73,7 @@ Page #:
   }
 
   incrementCueIndexByLevel { |force = false|
-    var level = this.currentCueLevel;
+    var level = 0;//this.currentCueLevel;
     var j = currentCueIndex + 1 % cueFuncs.size;
 
     while ({ (cueFuncs[j][\level] ?? 0) != level }) { j = j + 1 % cueFuncs.size };
@@ -86,7 +86,7 @@ Page #:
   }
 
   decrementCueIndexByLevel { |force = false|
-    var level = this.currentCueLevel;
+    var level = 0;//this.currentCueLevel;
     var j = currentCueIndex - 1 % cueFuncs.size;
 
     while ({ (cueFuncs[j][\level] ?? 0) != level }) { j = j - 1 % cueFuncs.size };
