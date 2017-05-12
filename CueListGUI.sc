@@ -872,7 +872,7 @@ CueListView : SCViewHolder {
         if (level <= collapseLevel) {
           var collapsed = (cueFuncs[i + 1 % cueFuncs.size][\level] ?? 0) > collapseLevel;
           cueListMap = cueListMap.add(i);
-          items = items.add(i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++ if (collapsed) { if (thisRegionIsUncollapsed) { " ┬ " } { " ─ " } } { "   " } ++ "  ".dup(level).join ++ name);
+          items = items.add(i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++ if (collapsed) { if (thisRegionIsUncollapsed) { " ┬ " } { " ≡ " } } { "   " } ++ "  ".dup(level).join ++ name);
         } {
           if (thisRegionIsUncollapsed) {
             var nextLevel = cueFuncs[i + 1 % cueFuncs.size][\level] ?? 0;
