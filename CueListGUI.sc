@@ -283,6 +283,12 @@ CueListView : SCViewHolder {
     gui[\cueList]
     .mouseDownAction_({ |v, x, y, mod, buttNum, clickCount|
       if (buttNum == 1) { ShowCtrlContextMenu.create(this, x - 2, y - 2) };
+      cueList.currentCueIndex_(cueListMap[v.selection[0]]);
+    })
+    .mouseMoveAction_({ |v|
+      var cueOver = cueListMap[v.selection[0]];
+      if (cueOver < cueList.currentCueIndex) { cueList.moveCurrentCueUp };
+      if (cueOver > cueList.currentCueIndex) { cueList.moveCurrentCueDown };
     })
     .mouseUpAction_({ |v|
       cueList.currentCueIndex_(cueListMap[v.selection[0]]);
@@ -866,12 +872,21 @@ CueListView : SCViewHolder {
         if (level <= collapseLevel) {
           var collapsed = (cueFuncs[i + 1 % cueFuncs.size][\level] ?? 0) > collapseLevel;
           cueListMap = cueListMap.add(i);
-          items = items.add(i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++ if (collapsed) { if (thisRegionIsUncollapsed) { " - " } { " + " } } { "   " } ++ "  ".dup(level).join ++ name);
+          items = items.add(i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++ if (collapsed) { if (thisRegionIsUncollapsed) { " ┬ " } { " ─ " } } { "   " } ++ "  ".dup(level).join ++ name);
         } {
           if (thisRegionIsUncollapsed) {
-            var expanded = (cueFuncs[i + 1 % cueFuncs.size][\level] ?? 0) > level;
+            var nextLevel = cueFuncs[i + 1 % cueFuncs.size][\level] ?? 0;
+            var expanded = nextLevel > level;
+            var endOfEra = nextLevel < level;
+
             cueListMap = cueListMap.add(i);
-            items = items.add(i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++ " |".dup(level).join ++ if (expanded) { " - " } { "   " } ++ name);
+            items = items.add(i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++ (if (endOfEra) {
+              var closedN = level - nextLevel;
+              var openN = level - closedN;
+              " │".dup(openN).join ++ " └".dup(closedN).join;
+            } {
+              " │".dup(level).join;
+            }) ++ if (expanded) { " ┬ " } { "   " } ++ name);
           };
         };
       };

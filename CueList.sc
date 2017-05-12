@@ -323,19 +323,19 @@ Page #:
   }
 
   addCueAfterCurrent { |name|
-    this.addEmptyCue(currentCueIndex + 1, name);
+    this.addEmptyCue(currentCueIndex + 1, name, this.currentCueLevel);
   }
 
   addCueBeforeCurrent { |name|
-    this.addEmptyCue(currentCueIndex, name);
+    this.addEmptyCue(currentCueIndex, name, this.currentCueLevel);
   }
 
-  addEmptyCue { |index, name|
+  addEmptyCue { |index, name, level|
     var funcCue = cueFuncs.detect({ |cue|
       cue.name == "default new cue function"
     });
     var func = if (funcCue.isNil) { defaultFunc } { funcCue[\func] };
-    this.addCue(index, name, func);
+    this.addCue(index, name, func, level: level);
   }
 
   addCue { |index, name, func, color, level|
