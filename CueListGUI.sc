@@ -26,7 +26,7 @@ CueListView : SCViewHolder {
       .background_(Color.clear)
       .resize_(2),
 
-      curCue: StaticText(view, Rect(leftPanelWidth + margin, margin, bounds.width - leftPanelWidth - (3*margin) - buttonWidth, 45))
+      curCue: StaticText(view, Rect(leftPanelWidth + (margin * 3), margin, bounds.width - leftPanelWidth - (3*margin) - buttonWidth, 45))
       .string_("Current cue")
       .stringColor_(Color.white)
       .resize_(2),
@@ -752,7 +752,7 @@ CueListView : SCViewHolder {
 
     gui[\topBlackPanel].bounds_(Rect(leftPanelWidth, 0, bounds.width - leftPanelWidth, 46 + (2 * margin)));
 
-    gui[\curCue].bounds_(Rect(leftPanelWidth + margin, 2*margin, bounds.width - leftPanelWidth - (3*margin), 35));
+    gui[\curCue].bounds_(Rect(leftPanelWidth + (3 * margin), 2*margin, bounds.width - leftPanelWidth - (3*margin), 35));
 
     gui[\cueList].bounds_(Rect(-1, 0, leftPanelWidth + 2, bounds.height - bottomPanelHeight - margin));
 
@@ -925,6 +925,8 @@ CueListView : SCViewHolder {
     var buttonColor = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.1);
     var blendedBackground = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.2);
     var moreBlendedBackground = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.4);
+
+    gui[\textBox].highlightColor_(blendedBackground);
 
     gui[\cueList].palette_(gui[\textBox].palette)
     .background_(gui[\textBox].palette.base.alpha_(0.97))
