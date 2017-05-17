@@ -498,6 +498,63 @@ CL1 {
     };
   }
 
+  setOutput { |...args| this.setOutputs(*args) }
+
+  setOutputs { |...args|
+    var currentType = \mix;
+
+    args.pairsDo { |boardChans, settings|
+      var tempDbs, tempOns, tempChans, tempTypes;
+
+      boardChans.do { |thing|
+        if (thing.class == Symbol) {
+          currentType = thing;
+        } {
+          tempChans = tempChans.add(thing);
+          tempTypes = tempTypes.add(currentType);
+        };
+      };
+
+      settings.asArray.flat.do { |thing|
+        switch (thing)
+        {\on} { tempOns = tempOns.add(true) }
+        {\off} { tempOns = tempOns.add(false) }
+        { tempDbs = tempDbs.add(thing) }
+      };
+
+      /*
+      boardChans.asArray.flat.do { |boardChan|
+        fadeRoutines[boardChan].stop;
+      };
+      */
+
+      this.setOutputsHelper(tempChans, tempTypes, tempDbs, tempOns);
+    }
+  }
+
+  setOutputsHelper { |boardChans, types, dbs, ons| // 0-index board channels
+    var sysexLevel, db, on, type;
+    dbs = dbs.asArray;
+    ons = ons.asArray;
+
+    boardChans.asArray.flat.do { |boardChan, i|
+      type = types[i];
+      db = dbs.wrapAt(i);
+      on = ons.wrapAt(i);
+      if (db.notNil) {
+        sysexLevel = this.class.dbToSysex(db);
+        outDevice.sysex(Int8Array[0xF0, 0x43, 0x18, 0x3E, 0x19, 0x01, 0x00, if (type == \mix) {0x54} {0x65}, 0x00, 0x00, 0x00, boardChan, 0x00, 0x00, 0x00, sysexLevel[0], sysexLevel[1], 0xF7]);
+        //dcaPositions[boardChan] = db;
+        //this.changed("DCA", boardChan);
+      };
+      if (on.notNil) {
+        outDevice.sysex(Int8Array[0xF0, 0x43, 0x18, 0x3E, 0x19, 0x01, 0x00, if (type == \mix) {0x52} {0x63}, 0x00, 0x00, 0x00, boardChan, 0x00, 0x00, 0x00, 0, on.asInt, 0xF7]);
+        //dcaIsOn[boardChan] = on;
+        //this.changed("DCA", boardChan);
+      };
+    };
+  }
+
   setSend { |...args| this.setSends(*args); }
 
   setSends { |boardChans ...args|

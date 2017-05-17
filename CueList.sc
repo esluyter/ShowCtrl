@@ -72,8 +72,26 @@ Page #:
     this.currentCueIndex_(currentCueIndex + 1, force);
   }
 
+  incrementCueIndexByLevel { |force = false|
+    var level = 0;//this.currentCueLevel;
+    var j = currentCueIndex + 1 % cueFuncs.size;
+
+    while ({ (cueFuncs[j][\level] ?? 0) != level }) { j = j + 1 % cueFuncs.size };
+
+    this.currentCueIndex_(j);
+  }
+
   decrementCueIndex { |force = false|
     this.currentCueIndex_(currentCueIndex - 1, force);
+  }
+
+  decrementCueIndexByLevel { |force = false|
+    var level = 0;//this.currentCueLevel;
+    var j = currentCueIndex - 1 % cueFuncs.size;
+
+    while ({ (cueFuncs[j][\level] ?? 0) != level }) { j = j - 1 % cueFuncs.size };
+
+    this.currentCueIndex_(j);
   }
 
   currentCueIndex_ { |newindex, force = false|
@@ -100,8 +118,16 @@ Page #:
     ^cueFuncs[currentCueIndex][\func];
   }
 
+  currentCueLevel {
+    ^(cueFuncs[currentCueIndex][\level] ?? 0)
+  }
+
   nextCueName {
     ^cueFuncs[currentCueIndex + 1 % cueFuncs.size][\name];
+  }
+
+  nextCueLevel {
+    ^(cueFuncs[currentCueIndex + 1 % cueFuncs.size][\level] ?? 0)
   }
 
   prevCueName {
@@ -172,44 +198,148 @@ Page #:
     this.changed(\unsavedChanges);
   }
 
+  currentCueLevel_ { |level|
+    if (level != cueFuncs[currentCueIndex][\level]) { unsavedListChanges = true };
+    cueFuncs[currentCueIndex][\level] = level;
+    this.changed(\cueLevels);
+    this.changed(\unsavedChanges);
+  }
+
   moveCurrentCueUp {
     var index = currentCueIndex;
-    var newIndex = if (index == 0) { 0 } { index - 1 };
+    var newIndex;// = if (index == 0) { 0 } { index - 1 };
     var func = this.currentCueFunc;
     var name = this.currentCueName;
-    this.deleteCurrentCue;
-    this.addCue(newIndex, name, func);
-    this.currentCueIndex_(newIndex);
+    var level = this.currentCueLevel;
+    var color = this.currentCueColor;
+    var j = index, groupSize, prevGroupSize;
+
+    // figure out current group size
+    while ({ groupSize.isNil }) {
+      j = j + 1;
+      if (j >= cueFuncs.size) {
+        groupSize = j - index;
+      } {
+        if ((cueFuncs[j][\level] ?? 0) <= level) {
+          groupSize = j - index;
+        };
+      };
+    };
+
+    j = index;
+
+    if (index == 0) {
+      // can't do shit
+    } {
+      // figure out next group size
+      while ({ prevGroupSize.isNil }) {
+        j = j - 1;
+        if (j <= 0) {
+          prevGroupSize = index - j;
+        } {
+          if ((cueFuncs[j][\level] ?? 0) <= level) {
+            prevGroupSize = index - j;
+          };
+        };
+      };
+      newIndex = j;
+
+      groupSize.do { |i|
+        var cue = cueFuncs[index + i];
+        var func = cue[\func];
+        var name = cue[\name];
+        var level = cue[\level] ?? 0;
+        var color = cue[\color];
+        cueFuncs.removeAt(index + i);
+        cueFuncs = cueFuncs.insert(newIndex + i, (name: name.asSymbol, func: func, color: color, level: level));
+      };
+
+      this.currentCueIndex_(newIndex);
+
+      unsavedListChanges = true;
+      this.changed(\cueFuncs);
+      this.changed(\unsavedChanges);
+      this.changed(\currentCueIndex);
+    };
   }
 
   moveCurrentCueDown {
     var index = currentCueIndex;
-    var newIndex = if (index == (cueFuncs.size - 1)) { index } { index + 1 };
+    var newIndex;// = if (index == (cueFuncs.size - 1)) { index } { index + 1 };
     var func = this.currentCueFunc;
     var name = this.currentCueName;
-    this.deleteCurrentCue;
-    this.addCue(newIndex, name, func);
-    this.currentCueIndex_(newIndex);
+    var level = this.currentCueLevel;
+    var color = this.currentCueColor;
+    var j = index, groupSize, nextGroupSize;
+
+    // figure out current group size
+    while ({ groupSize.isNil }) {
+      j = j + 1;
+      if (j >= cueFuncs.size) {
+        groupSize = j - index;
+      } {
+        if ((cueFuncs[j][\level] ?? 0) <= level) {
+          groupSize = j - index;
+        };
+      };
+    };
+
+    if (j >= cueFuncs.size) {
+      // can't move the group cuz we're at the end
+    } {
+      var nextIndex = j;
+
+      // figure out next group size
+      while ({ nextGroupSize.isNil }) {
+        j = j + 1;
+        if (j >= cueFuncs.size) {
+          nextGroupSize = j - nextIndex;
+        } {
+          if ((cueFuncs[j][\level] ?? 0) <= level) {
+            nextGroupSize = j - nextIndex;
+          };
+        };
+      };
+      newIndex = min(cueFuncs.size - 1, index + groupSize + nextGroupSize - 1);
+
+      groupSize.do {
+        var func = this.currentCueFunc;
+        var name = this.currentCueName;
+        var level = this.currentCueLevel;
+        var color = this.currentCueColor;
+        cueFuncs.removeAt(currentCueIndex);
+        cueFuncs = cueFuncs.insert(newIndex, (name: name.asSymbol, func: func, color: color, level: level));
+      };
+
+      this.currentCueIndex_(newIndex - groupSize + 1);
+
+      unsavedListChanges = true;
+      this.changed(\cueFuncs);
+      this.changed(\unsavedChanges);
+      this.changed(\currentCueIndex);
+    };
+
+
   }
 
   addCueAfterCurrent { |name|
-    this.addEmptyCue(currentCueIndex + 1, name);
+    this.addEmptyCue(currentCueIndex + 1, name, this.currentCueLevel);
   }
 
   addCueBeforeCurrent { |name|
-    this.addEmptyCue(currentCueIndex, name);
+    this.addEmptyCue(currentCueIndex, name, this.currentCueLevel);
   }
 
-  addEmptyCue { |index, name|
+  addEmptyCue { |index, name, level|
     var funcCue = cueFuncs.detect({ |cue|
       cue.name == 'default new cue function'
     });
     var func = if (funcCue.isNil) { defaultFunc } { funcCue[\func] };
-    this.addCue(index, name, func);
+    this.addCue(index, name, func, level: level);
   }
 
-  addCue { |index, name, func|
-    cueFuncs = cueFuncs.insert(index, (name: name.asSymbol, func: func));
+  addCue { |index, name, func, color, level|
+    cueFuncs = cueFuncs.insert(index, (name: name.asSymbol, func: func, color: color, level: level));
     unsavedListChanges = true;
     this.changed(\cueFuncs);
     this.changed(\unsavedChanges);
