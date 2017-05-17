@@ -6,6 +6,7 @@ CueListView : SCViewHolder {
   var textBoxContainer;
   var <>deletesConfirmed = 0;
   var cueListMap; // will be a map of cue list items to cue index (for cue folding)
+  var actionGate = true;
 
   *new { |parent, bounds|
     ^super.new.init(parent, bounds);
@@ -289,7 +290,16 @@ CueListView : SCViewHolder {
     gui[\cueList]
     .mouseDownAction_({ |v, x, y, mod, buttNum, clickCount|
       if (buttNum == 1) { ShowCtrlContextMenu.create(this, x - 2, y - 2) };
-      cueList.currentCueIndex_(cueListMap[v.selection[0]]);
+      actionGate = true;
+      nil;
+    })
+    .action_({ |v|
+      "action".postln;
+      if (actionGate) {
+        cueList.currentCueIndex_(cueListMap[v.selection[0]]);
+      };
+      actionGate = false;
+      nil;
     })
     .mouseMoveAction_({ |v|
       var cueOver = cueListMap[v.selection[0]];
