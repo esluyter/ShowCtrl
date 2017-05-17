@@ -199,6 +199,12 @@ CueListView : SCViewHolder {
         ^true;
       };
       if (keycode == 49) { //space
+        if (mod.isShift) {
+          if (cueList.unsavedCueChanges) {
+            if (this.saveCue.not) { ^false };
+          };
+          ^cueList.executeCurrentCue(false); // don't increment
+        };
         ^cueList.executeCurrentCue;
       };
     };
@@ -442,7 +448,8 @@ CueListView : SCViewHolder {
       "⇧⌥↑", "Move current cue up in cue list",
       "⌥↓", "Go down in cue list",
       "⇧⌥↓", "Move current cue down in cue list",
-      "⌥Space", "Execute current cue",
+      "⌥Space", "Execute current cue and move on",
+      "⇧⌥Space", "Save and preview current cue",
       "⌥⌘↑", "Add cue above current cue (shift - without prompt)",
       "⌥⌘↓", "Add cue below current cue (shift - without prompt)",
       "⌘R", "Rename current cue",
@@ -524,28 +531,32 @@ CueListView : SCViewHolder {
       { gui[\topBlackPanel].background_(restoreBackground) }.defer(0.1);
       { gui[\topBlackPanel].background_(Color.red) }.defer(0.2);
       { gui[\topBlackPanel].background_(restoreBackground) }.defer(0.3);
-    } {
-      restoreBackground = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.2);
-      {
-        gui[\topBlackPanel].background = gui[\textBox].palette.base.blend(Color.green, 0.8);
-        gui[\cueList].hiliteColor = gui[\textBox].palette.base.blend(Color.green, 0.8);
-        gui[\bottomPanel][\updateButt].visible_(true).states = [[
-          gui[\bottomPanel][\updateButt].states[0][0],
-          nil,
-          Color.green
-        ]];
-        nil
-      }.defer(0.001);
-      {
-        /*
-        gui[\topBlackPanel].background = restoreBackground;
-        gui[\cueList].hiliteColor = restoreBackground;
-        gui[\bottomPanel][\updateButt].visible = false;
-        */
-        this.updateUnsaved;
-      }.defer(0.2);
-      cueList.currentCueFunc_(func);
+
+      ^false;
     };
+
+    restoreBackground = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.2);
+    {
+      gui[\topBlackPanel].background = gui[\textBox].palette.base.blend(Color.green, 0.8);
+      gui[\cueList].hiliteColor = gui[\textBox].palette.base.blend(Color.green, 0.8);
+      gui[\bottomPanel][\updateButt].visible_(true).states = [[
+        gui[\bottomPanel][\updateButt].states[0][0],
+        nil,
+        Color.green
+      ]];
+      nil
+    }.defer(0.001);
+    {
+      /*
+      gui[\topBlackPanel].background = restoreBackground;
+      gui[\cueList].hiliteColor = restoreBackground;
+      gui[\bottomPanel][\updateButt].visible = false;
+      */
+      this.updateUnsaved;
+    }.defer(0.2);
+    cueList.currentCueFunc_(func);
+
+    ^true;
   }
 
   saveCueFuncs { |action|

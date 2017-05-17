@@ -42,7 +42,7 @@ Page #:
     this.changed(\unsavedChanges);
   }
 
-  executeCurrentCue {
+  executeCurrentCue { |incrementIndex = true|
     var func = this.currentCueFunc;
     var name = this.currentCueName;
     var index = this.currentCueIndex;
@@ -64,7 +64,7 @@ Page #:
     };
 
     lastExecutedCue = name;
-    if (this.currentCueIndex == index) { this.incrementCueIndex() };
+    if (this.currentCueIndex == index && incrementIndex) { this.incrementCueIndex() };
     ^retval;
   }
 
@@ -202,7 +202,7 @@ Page #:
 
   addEmptyCue { |index, name|
     var funcCue = cueFuncs.detect({ |cue|
-      cue.name == "default new cue function"
+      cue.name == 'default new cue function'
     });
     var func = if (funcCue.isNil) { defaultFunc } { funcCue[\func] };
     this.addCue(index, name, func);

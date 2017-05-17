@@ -5,6 +5,12 @@ Initialize resources, environment variables, etc.
 
 */
 
+BootWindow.show {
+
+  // do things
+
+};
+
 } ), ( 'name': 'Cleanup', 'func': { |thisCueList|
 /*
 
