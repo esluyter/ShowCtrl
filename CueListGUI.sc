@@ -6,14 +6,13 @@ CueListView : SCViewHolder {
   var textBoxContainer;
   var <>deletesConfirmed = 0;
   var cueListMap; // will be a map of cue list items to cue index (for cue folding)
-  var actionGate = true;
+  var actionGate = false;
 
   *new { |parent, bounds|
     ^super.new.init(parent, bounds);
   }
 
   init { |parent, bounds|
-
     bounds = bounds ?? Rect(0, 0, parent.bounds.width, parent.bounds.height);
     view = View(parent, bounds);
 
@@ -32,8 +31,11 @@ CueListView : SCViewHolder {
       .stringColor_(Color.white)
       .resize_(2),
 
-      cueList: ListView(view, Rect(-1, -1, leftPanelWidth + 2, bounds.height - bottomPanelHeight - margin + 1))
+      cueList: ListView(view, Rect(-1, 2, leftPanelWidth + 2, bounds.height - bottomPanelHeight - margin + 1))
       .resize_(4),
+
+      cueListHeaderFiller: View(view, Rect(0, 0, 3, 20)),
+      cueListHeader: StaticText(view, Rect(3, 2, leftPanelWidth - 3, 20)),
 
       textBox: CodeView(textBoxContainer, Rect(-1, 0, bounds.width - leftPanelWidth + 2, bounds.height - 35 - bottomPanelHeight - (5*margin)))
       .customTokens_((
@@ -147,13 +149,13 @@ CueListView : SCViewHolder {
         .resize_(7),
 
         colorScheme: EZPopUpMenu(view, Rect((5.9*buttonWidth) + (5*margin) - 24, bounds.height - (bottomPanelHeight/2) - 3, buttonWidth * 2, bottomPanelHeight / 2 - margin), nil, [
-          'One Dark' -> { gui[\textBox].oneDarkColorScheme },
           'One Light' -> { gui[\textBox].oneLightColorScheme },
+          'One Dark' -> { gui[\textBox].oneDarkColorScheme },
           'Paper Light' -> { gui[\textBox].paperLightColorScheme },
           'Bright Dark' -> { gui[\textBox].brightDarkColorScheme }
         ]),
 
-        keyBindingsButt: Button(view, Rect((7.9*buttonWidth) + (7*margin) - 24, bounds.height - (bottomPanelHeight/2) - 3, buttonWidth * 1.4, bottomPanelHeight / 2 - margin).postln)
+        keyBindingsButt: Button(view, Rect((7.9*buttonWidth) + (7*margin) - 24, bounds.height - (bottomPanelHeight/2) - 3, buttonWidth * 1.4, bottomPanelHeight / 2 - margin))
         .states_([["Keybindings"]])
         .action_({ this.makeKeyBindingsWindow })
         .resize_(7);
@@ -294,7 +296,7 @@ CueListView : SCViewHolder {
       nil;
     })
     .action_({ |v|
-      "action".postln;
+      v.selection[0].postln;
       if (actionGate) {
         cueList.currentCueIndex_(cueListMap[v.selection[0]]);
       };
@@ -303,11 +305,16 @@ CueListView : SCViewHolder {
     })
     .mouseMoveAction_({ |v|
       var cueOver = cueListMap[v.selection[0]];
-      if (cueOver < cueList.currentCueIndex) { cueList.moveCurrentCueUp };
-      if (cueOver > cueList.currentCueIndex) { cueList.moveCurrentCueDown };
+      if (cueOver.notNil) {
+        if (cueOver < cueList.currentCueIndex) { cueList.moveCurrentCueUp };
+        if (cueOver > cueList.currentCueIndex) { cueList.moveCurrentCueDown };
+      }
     })
     .mouseUpAction_({ |v|
-      cueList.currentCueIndex_(cueListMap[v.selection[0]]);
+      //cueList.currentCueIndex_(cueListMap[v.selection[0]]);
+      if (v.selection[0] == 0) {
+        v.selection_(cueListMap.indexOf(cueList.currentCueIndex))
+      };
       gui[\textBox].focus;
     })
     .keyDownAction_({ |view, chr, mod, uni, keycode, key|
@@ -775,7 +782,10 @@ CueListView : SCViewHolder {
 
     gui[\curCue].bounds_(Rect(leftPanelWidth + (3 * margin), 2*margin, bounds.width - leftPanelWidth - (3*margin), 35));
 
-    gui[\cueList].bounds_(Rect(-1, 0, leftPanelWidth + 2, bounds.height - bottomPanelHeight - margin));
+    gui[\cueListHeader].resizeTo(leftPanelWidth - 3, gui[\cueListHeader].bounds.height);
+    gui[\cueListHeaderFiller].resizeTo(leftPanelWidth, gui[\cueListHeaderFiller].bounds.height);
+
+    gui[\cueList].bounds_(Rect(-1, 2, leftPanelWidth + 2, bounds.height - bottomPanelHeight - margin));
 
     textBoxContainer.bounds_(Rect(leftPanelWidth, 45 + (2 * margin), bounds.width - leftPanelWidth, bounds.height - 35 - bottomPanelHeight - (5*margin)));
 
@@ -790,10 +800,15 @@ CueListView : SCViewHolder {
   }
 
   font_ { |afont|
+    var listFont, listHeight;
     font = afont.size_(afont.size ?? 12);
+    listFont = font.copy.size_(font.size * 1.2.reciprocal);
+    listHeight = GUI.stringBounds("CUE", listFont).height;
 
     gui[\textBox].font_(font);
-    gui[\cueList].font_(font.copy.size_(font.size * 1.2.reciprocal));
+    gui[\cueListHeader].font_(listFont).resizeTo(leftPanelWidth - 3, listHeight);
+    gui[\cueListHeaderFiller].resizeTo(leftPanelWidth, listHeight + 3);
+    gui[\cueList].font_(listFont);
     gui[\curCue].font_(font.copy.size_(20));
   }
 
@@ -851,12 +866,15 @@ CueListView : SCViewHolder {
 
   updateCues {
     defer {
-      var items = [];
+      var headerText = "#".padLeft(cueList.cueFuncs.size.asString.size, " ") ++ "   CUE";
+      var items = [headerText];
       var cueFuncs = cueList.cueFuncs;
       var curIndex = cueList.currentCueIndex;
       var collapseLevel = 0;
 
-      cueListMap = [];
+      gui[\cueListHeader].string_(headerText);
+
+      cueListMap = [nil];
 
       cueFuncs.do { |arr, i|
         var name = arr[\name];
@@ -936,18 +954,26 @@ CueListView : SCViewHolder {
   updateCueColors {
     var cueColors = cueList.cueColors;
     gui[\cueList].colors = cueListMap.collect({ |n|
-      var color = cueColors[n];
+      var color = if (n.isNil) { nil } { cueColors[n] };
       if (color.isNil) { Color.clear } { color.copy.alpha_(0.5) }
     });
   }
 
   makeStyle {
     var buttonText = gui[\textBox].palette.baseText;
-    var buttonColor = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.1);
-    var blendedBackground = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.2);
-    var moreBlendedBackground = gui[\textBox].palette.base.blend(gui[\textBox].palette.base.complementary, 0.4);
+    var bg = gui[\textBox].palette.base;
+    var complementary = bg.complementary;
+    var buttonColor = bg.blend(complementary, 0.1);
+    var blendedBackground = bg.blend(complementary, 0.2);
+    var moreBlendedBackground = bg.blend(complementary, 0.4);
 
     //gui[\textBox].highlightColor_(blendedBackground);
+
+    gui[\cueListHeader]
+    .stringColor_(bg)
+    .background_(bg.blend(complementary, 0.7));
+
+    gui[\cueListHeaderFiller].background_(bg.blend(complementary, 0.7));
 
     gui[\cueList].palette_(gui[\textBox].palette)
     .background_(gui[\textBox].palette.base.alpha_(0.97))
