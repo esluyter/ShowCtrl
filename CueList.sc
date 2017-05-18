@@ -24,10 +24,10 @@ CueList {
     defaultFunc = argdeffunc ? { |thisCueList|
 /*
 
-Cue on:
-Page #:
+
 
 */
+
 
 };
 
