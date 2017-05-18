@@ -555,7 +555,7 @@ CueListView : SCViewHolder {
     var action = {
       deletesConfirmed = deletesConfirmed + 1;
       cueList.deleteCurrentCue;
-      cueList.decrementCueIndex;
+      //cueList.decrementCueIndex;
     };
     if (force.not) {
       this.confirmBox("Are you sure?", action);

@@ -347,12 +347,13 @@ Page #:
   }
 
   deleteCurrentCue {
-    this.deleteCue(currentCueIndex);
+    this.deleteCue(currentCueIndex, { currentCueIndex = currentCueIndex - 1 });
   }
 
-  deleteCue { |index|
+  deleteCue { |index, action|
     cueFuncs.removeAt(index);
     unsavedListChanges = true;
+    action.value;
     this.changed(\cueFuncs);
     this.changed(\unsavedChanges);
     this.changed(\currentCueIndex);
