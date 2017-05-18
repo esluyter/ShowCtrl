@@ -208,7 +208,7 @@ CueListView : SCViewHolder {
         ^true;
       };
       if (keycode == 126) { // up
-        if (mod.isCtrl) {
+        if (mod.isCtrl || mod.isCmd) {
           this.addCueAbove(mod.isShift.not);
           ^true;
         };
