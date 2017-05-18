@@ -296,7 +296,6 @@ CueListView : SCViewHolder {
       nil;
     })
     .action_({ |v|
-      v.selection[0].postln;
       if (actionGate) {
         cueList.currentCueIndex_(cueListMap[v.selection[0]]);
       };
