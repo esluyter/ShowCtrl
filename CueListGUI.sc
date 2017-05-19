@@ -932,7 +932,7 @@ CueListView : SCViewHolder {
           items = items.add(
             i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++
             if (collapsed) {
-              " │".dup(level).join ++
+              levelStack.collect({ |bool| if (bool) { " ║" } { " │" } }).join ++
               if (thisRegionIsUncollapsed) { if (executeChildren) { levelStack = levelStack.add(true); " ╦ " } { levelStack = levelStack.add(false); " ┬ " } } { if (executeChildren) { " « " } { " ‹ " } }
             } {
               (if (endOfEra) {
