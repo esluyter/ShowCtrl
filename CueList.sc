@@ -45,12 +45,32 @@ CueList {
   executeCurrentCue { |incrementIndex = true|
     var func = this.currentCueFunc;
     var name = this.currentCueName;
+    var origName = name;
     var index = this.currentCueIndex;
+    var origIndex = index;
+    var level = this.currentCueLevel;
+    var origLevel = level;
+    var executeChildren = this.currentCueExecuteChildren;
     var retval = true;
+    var cue;
+    var exec = {
+      func.(this);
+      ("Executed " ++ index ++ ": " ++ name).postln;
+      index = index + 1;
+      cue = cueFuncs[index];
+      func = cue[\func];
+      name = cue[\name];
+      level = cue[\level] ?? 0;
+    };
 
     try {
       preExecuteHook.(this, index, name, func);
-      func.(this);
+      exec.();
+      if (executeChildren) {
+        while { level > origLevel } {
+          exec.();
+        };
+      };
       postExecuteHook.(this, index, name, func);
     } { |error|
       error.reportError;
@@ -63,8 +83,8 @@ CueList {
       }
     };
 
-    lastExecutedCue = name;
-    if (this.currentCueIndex == index && incrementIndex) { this.incrementCueIndex() };
+    lastExecutedCue = origName;
+    if (currentCueIndex == origIndex && incrementIndex) { this.currentCueIndex_(index) };
     ^retval;
   }
 
@@ -120,6 +140,10 @@ CueList {
 
   currentCueLevel {
     ^(cueFuncs[currentCueIndex][\level] ?? 0)
+  }
+
+  currentCueExecuteChildren {
+    ^(cueFuncs[currentCueIndex][\executeChildren] ?? false)
   }
 
   nextCueName {
@@ -198,8 +222,66 @@ CueList {
     this.changed(\unsavedChanges);
   }
 
+  currentCueExecuteChildren_ { |bool|
+    cueFuncs[currentCueIndex][\executeChildren] = bool;
+    this.changed(\cueFuncs);
+    this.changed(\unsavedChanges);
+  }
+
+  currentCueLevelUp {
+    var index = currentCueIndex;
+    var level = cueFuncs[currentCueIndex][\level] ?? 0;
+    var thisLevel;
+
+    if ((currentCueIndex == 0)) {
+      ^false;
+    };
+
+    if (level - (cueFuncs[index - 1][\level] ?? 0) > 0) {
+      ^false;
+    };
+
+    cueFuncs[currentCueIndex][\level] = level + 1;
+
+    index = index + 1;
+    thisLevel = cueFuncs[index][\level] ?? 0;
+    while { thisLevel > level } {
+      cueFuncs[index][\level] = thisLevel + 1;
+      index = index + 1;
+      thisLevel = cueFuncs[index][\level] ?? 0;
+    };
+
+    this.changed(\cueLevels);
+    this.changed(\unsavedChanges);
+  }
+
+  currentCueLevelDown {
+    var index = currentCueIndex;
+    var level = cueFuncs[currentCueIndex][\level] ?? 0;
+    var thisLevel;
+
+    if (level == 0) {
+      ^false;
+    };
+
+    cueFuncs[currentCueIndex][\level] = max(level - 1, 0);
+
+    index = index + 1;
+    thisLevel = cueFuncs[index][\level] ?? 0;
+    while { thisLevel > level } {
+      cueFuncs[index][\level] = max(thisLevel - 1);
+      index = index + 1;
+      thisLevel = cueFuncs[index][\level] ?? 0;
+    };
+
+    this.changed(\cueLevels);
+    this.changed(\unsavedChanges);
+  }
+
   currentCueLevel_ { |level|
-    if (level != cueFuncs[currentCueIndex][\level]) { unsavedListChanges = true };
+    if (level != cueFuncs[currentCueIndex][\level]) {
+      unsavedListChanges = true
+    };
     cueFuncs[currentCueIndex][\level] = level;
     this.changed(\cueLevels);
     this.changed(\unsavedChanges);
@@ -332,7 +414,7 @@ CueList {
 
   addEmptyCue { |index, name, level|
     var funcCue = cueFuncs.detect({ |cue|
-      cue.name == 'default new cue function'
+      cue.name == 'default cue'
     });
     var func = if (funcCue.isNil) { defaultFunc } { funcCue[\func] };
     this.addCue(index, name, func, level: level);
@@ -347,7 +429,21 @@ CueList {
   }
 
   deleteCurrentCue {
-    this.deleteCue(currentCueIndex, { currentCueIndex = currentCueIndex - 1 });
+    var level = this.currentCueLevel;
+    var index = currentCueIndex;
+    var thisLevel;
+
+    index = index + 1;
+    thisLevel = cueFuncs[index][\level] ?? 0;
+    while { thisLevel > level } {
+      cueFuncs[index][\level] = thisLevel - 1;
+      index = index + 1;
+      thisLevel = cueFuncs[index][\level] ?? 0;
+    };
+
+    this.deleteCue(currentCueIndex, {
+      currentCueIndex = max(currentCueIndex - 1, 0);
+    });
   }
 
   deleteCue { |index, action|

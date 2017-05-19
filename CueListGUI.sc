@@ -7,6 +7,7 @@ CueListView : SCViewHolder {
   var <>deletesConfirmed = 0;
   var cueListMap; // will be a map of cue list items to cue index (for cue folding)
   var actionGate = false;
+  var <collapseLevel = inf; // cue folding level
 
   *new { |parent, bounds|
     ^super.new.init(parent, bounds);
@@ -180,11 +181,13 @@ CueListView : SCViewHolder {
     if (mod.isAlt) {
       //keycode.postln;
       if (keycode == 123) { // left
-        cueList.currentCueLevel = (cueList.currentCueLevel - 1).max(0);
+        //cueList.currentCueLevel = (cueList.currentCueLevel - 1).max(0);
+        cueList.currentCueLevelDown;
         ^true;
       };
       if (keycode == 124) { // right
-        cueList.currentCueLevel = (cueList.currentCueLevel + 1);
+        //cueList.currentCueLevel = (cueList.currentCueLevel + 1);
+        cueList.currentCueLevelUp;
         ^true;
       };
       if (keycode == 121) { // pg down
@@ -291,7 +294,12 @@ CueListView : SCViewHolder {
 
     gui[\cueList]
     .mouseDownAction_({ |v, x, y, mod, buttNum, clickCount|
-      if (buttNum == 1) { ShowCtrlContextMenu.create(this, x - 2, y - 2) };
+      if (buttNum == 1) { ShowCtrlContextMenu.create(this, x - 2, y - 2,
+        "Rename cue", { this.renameCue },
+        "Delete cue", { this.deleteCue(true) },
+        "Toggle group mode",
+        { cueList.currentCueExecuteChildren_(cueList.currentCueExecuteChildren.not) }
+      ) };
       actionGate = true;
       nil;
     })
@@ -811,6 +819,11 @@ CueListView : SCViewHolder {
     gui[\curCue].font_(font.copy.size_(20));
   }
 
+  collapseLevel_ { |level|
+    collapseLevel = level;
+    this.updateCues;
+  }
+
   refresh {
     this.updateCues;
     this.updateCurrentCue;
@@ -869,7 +882,7 @@ CueListView : SCViewHolder {
       var items = [headerText];
       var cueFuncs = cueList.cueFuncs;
       var curIndex = cueList.currentCueIndex;
-      var collapseLevel = 0;
+      var levelStack = [];
 
       gui[\cueListHeader].string_(headerText);
 
@@ -881,6 +894,7 @@ CueListView : SCViewHolder {
         var prevCollapseLevelIndex = nil;
         var nextCollapseLevelIndex = nil;
         var thisRegionIsUncollapsed = false;
+        var executeChildren = arr[\executeChildren] ?? false;
         var j = i;
 
         while ({ prevCollapseLevelIndex.isNil }) {
@@ -909,8 +923,33 @@ CueListView : SCViewHolder {
 
         if (level <= collapseLevel) {
           var collapsed = (cueFuncs[i + 1 % cueFuncs.size][\level] ?? 0) > collapseLevel;
+
+          var nextLevel = cueFuncs[i + 1 % cueFuncs.size][\level] ?? 0;
+          var expanded = nextLevel > level;
+          var endOfEra = nextLevel < level;
+
           cueListMap = cueListMap.add(i);
-          items = items.add(i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++ if (collapsed) { if (thisRegionIsUncollapsed) { " ┬ " } { " ≡ " } } { "   " } ++ "  ".dup(level).join ++ name);
+          items = items.add(
+            i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++
+            if (collapsed) {
+              " │".dup(level).join ++
+              if (thisRegionIsUncollapsed) { if (executeChildren) { levelStack = levelStack.add(true); " ╦ " } { levelStack = levelStack.add(false); " ┬ " } } { if (executeChildren) { " « " } { " ‹ " } }
+            } {
+              (if (endOfEra) {
+                var closedN = level - nextLevel;
+                var openN = level - closedN;
+                var closedStack = [];
+                closedN.do({ closedStack = closedStack.insert(0, levelStack.pop) });
+                levelStack.collect({ |bool| if (bool) { " ║" } { " │" } }).join ++ closedStack.collect({ |bool| if (bool) { " ╚" } { " └" } }).join
+                //" └".dup(closedN).join;
+              } {
+                //" │".dup(level).join;
+                levelStack.collect({ |bool| if (bool) { " ║" } { " │" } }).join
+              }) ++
+              if (expanded) { if (executeChildren) { levelStack = levelStack.add(true); " ╦ " } { levelStack = levelStack.add(false); " ┬ " } } { "   " }
+            } ++
+            name
+          );
         } {
           if (thisRegionIsUncollapsed) {
             var nextLevel = cueFuncs[i + 1 % cueFuncs.size][\level] ?? 0;
@@ -918,13 +957,22 @@ CueListView : SCViewHolder {
             var endOfEra = nextLevel < level;
 
             cueListMap = cueListMap.add(i);
-            items = items.add(i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++ (if (endOfEra) {
-              var closedN = level - nextLevel;
-              var openN = level - closedN;
-              " │".dup(openN).join ++ " └".dup(closedN).join;
-            } {
-              " │".dup(level).join;
-            }) ++ if (expanded) { " ┬ " } { "   " } ++ name);
+            items = items.add(
+              i.asString.padLeft(cueList.cueFuncs.size.asString.size) ++
+              (if (endOfEra) {
+                var closedN = level - nextLevel;
+                var openN = level - closedN;
+                var closedStack = [];
+                closedN.do({ closedStack = closedStack.insert(0, levelStack.pop) });
+                levelStack.collect({ |bool| if (bool) { " ║" } { " │" } }).join ++ closedStack.collect({ |bool| if (bool) { " ╚" } { " └" } }).join
+                //" │".dup(openN).join ++ " └".dup(closedN).join;
+              } {
+                //" │".dup(level).join;
+                levelStack.collect({ |bool| if (bool) { " ║" } { " │" } }).join
+              }) ++
+              if (expanded) { if (executeChildren) { levelStack = levelStack.add(true); " ╦ " } { levelStack = levelStack.add(false); " ┬ " } } { "   " } ++
+              name
+            );
           };
         };
       };

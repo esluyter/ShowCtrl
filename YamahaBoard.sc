@@ -782,6 +782,17 @@ CL1 {
     hpf = eqSpec[\hpf] ?? ();
     att = eqSpec[\att] ?? ();
 
+    if (hpf.freq.notNil) {
+      // FOR FREQ/GAIN/Q
+      elementhigh = 0x00;
+      elementlow = 0x42;
+
+      indexlow = 1;
+      sysexLevel = this.class.freqToSysex(hpf.freq);
+      this.paramChange(1, elementhigh, elementlow,
+        0, indexlow, boardChan,
+        [0, 0, 0, 0, sysexLevel]);
+    };
 
     [low, lowmid, highmid, high].do { |spec, i|
       // FOR BYPASSES
