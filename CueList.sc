@@ -54,9 +54,8 @@ CueList {
     var retval = true;
     var cue;
     var exec = {
-      func.(this);
-      ("Executed " ++ index ++ ": " ++ name).postln;
-      index = index + 1;
+      ("-> [" ++ index ++ ": " ++ name ++ "] -> " ++ func.(this)).postln;
+      index = (index + 1) % cueFuncs.size;
       cue = cueFuncs[index];
       func = cue[\func];
       name = cue[\name];
@@ -223,6 +222,7 @@ CueList {
   }
 
   currentCueExecuteChildren_ { |bool|
+    if (bool != this.currentCueExecuteChildren) { unsavedListChanges = true };
     cueFuncs[currentCueIndex][\executeChildren] = bool;
     this.changed(\cueFuncs);
     this.changed(\unsavedChanges);
@@ -244,11 +244,11 @@ CueList {
     cueFuncs[currentCueIndex][\level] = level + 1;
 
     index = index + 1;
-    thisLevel = cueFuncs[index][\level] ?? 0;
+    thisLevel = if (index >= cueFuncs.size) { 0 } { cueFuncs[index][\level] ?? 0 };
     while { thisLevel > level } {
       cueFuncs[index][\level] = thisLevel + 1;
       index = index + 1;
-      thisLevel = cueFuncs[index][\level] ?? 0;
+      thisLevel = if (index >= cueFuncs.size) { 0 } { cueFuncs[index][\level] ?? 0 };
     };
 
     this.changed(\cueLevels);
@@ -267,11 +267,11 @@ CueList {
     cueFuncs[currentCueIndex][\level] = max(level - 1, 0);
 
     index = index + 1;
-    thisLevel = cueFuncs[index][\level] ?? 0;
+    thisLevel = if (index >= cueFuncs.size) { 0 } { cueFuncs[index][\level] ?? 0 };
     while { thisLevel > level } {
       cueFuncs[index][\level] = max(thisLevel - 1);
       index = index + 1;
-      thisLevel = cueFuncs[index][\level] ?? 0;
+      thisLevel = if (index >= cueFuncs.size) { 0 } { cueFuncs[index][\level] ?? 0 };
     };
 
     this.changed(\cueLevels);

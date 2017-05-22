@@ -537,8 +537,8 @@ CueListView : SCViewHolder {
       "⌘↑", "Select previous autocompletion suggestion",
       "⌘↓", "Select next autocompletion suggestion",
       "⌘→, ⌘←,", "Accept selected autocompletion",
-      "⇧Space", "",
-
+      "⇧Space", "(^ditto)",
+      "⌘⇧Space", "Show/hide completions",
     ]);
   }
 
