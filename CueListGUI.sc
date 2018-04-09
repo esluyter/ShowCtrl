@@ -1187,6 +1187,7 @@ CueListWindow : SCViewHolder {
 
   font_ { |afont|
     view.font_(afont);
+    completeWindow.makeStyle;
   }
 
   gui {
