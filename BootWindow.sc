@@ -30,14 +30,17 @@ BootWindow {
       f.close;
 
       server.options.memSize_(1024 * memsize.string.asInteger)
-      .numOutputBusChannels_(in_chans.string.asInteger)
-      .numInputBusChannels_(out_chans.string.asInteger)
+      .numInputBusChannels_(in_chans.string.asInteger)
+      .numOutputBusChannels_(out_chans.string.asInteger)
       .inDevice_(in_dev.item)
       .outDevice_(out_dev.item)
       .numAudioBusChannels_(ar_buses.string.asInteger)
       .numControlBusChannels_(kr_buses.string.asInteger)
       .blockSize_(blocksize.string.asInteger)
-      .sampleRate_(sr.string.asInteger);
+      .sampleRate_(sr.string.asInteger)
+      .recHeaderFormat_(settings.rec_header)
+      .recSampleFormat_(settings.rec_format)
+      .recChannels_(settings.rec_chans);
 
       server.quit;
 
@@ -51,6 +54,20 @@ BootWindow {
 
     var thispath = PathName(BootWindow.filenameSymbol.asString).pathOnly;
     var settings = File(thispath +/+ "settings.txt", "r").readAllString.interpret;
+    var defaultSettings = (
+      in_dev: "Built-in Microph",
+      out_dev: "Built-in Output",
+      sr: 48000,
+      in_chans: 2,
+      out_chans: 2,
+      ar_buses: 1024,
+      kr_buses: 16384,
+      memsize: 512,
+      blocksize: 64,
+      rec_header: "AIFF",
+      rec_format: "float",
+      rec_chans: 2
+    );
 
     if (win.notNil) { win.close };
 
@@ -179,7 +196,7 @@ BootWindow {
     .font_(body_font);
 
     rec_chans = TextField(win, Rect(300, 350, 50, 20))
-    .string_("2")
+    .string_(settings.rec_chans)
     .font_(body_font);
 
     Button(win, Rect(10, 395, 155, 50))
