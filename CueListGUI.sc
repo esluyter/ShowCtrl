@@ -638,7 +638,7 @@ CueListView : SCViewHolder {
       celebrate.();
     } {
       FileDialog({ |path|
-        path = path.asPathName;
+        path = PathName(path);
         path = path.pathOnly +/+ path.fileNameWithoutExtension;
         (if (File.exists(path)) { "rm -r " ++ path.copy.replace(" ", "\\ ") } { "" }).unixCmd({ |exitcode|
           if (exitcode != 0) {
