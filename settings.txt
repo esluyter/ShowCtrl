@@ -1,3 +1,3 @@
-( 'in_dev': "Soundflower (2ch)", 'in_chans': 2, 'kr_buses': 16384, 'rec_format': "float", 
-  'ar_buses': 1024, 'out_dev': "Built-in Output", 'rec_header': "AIFF", 'rec_chans': 2, 'sr': 48000, 
-  'out_chans': 2, 'memsize': 512, 'blocksize': 64 )
+( 'in_dev': "Output / Soundflower64", 'in_chans': 12, 'kr_buses': 16384, 'rec_format': "float", 
+  'ar_buses': 1024, 'out_dev': "Built-in Output", 'rec_header': "aiff", 'rec_chans': 2, 'sr': 96000, 
+  'out_chans': 4, 'memsize': 512, 'blocksize': 64 )

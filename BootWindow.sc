@@ -49,7 +49,7 @@ BootWindow {
       };
     };
 
-    var rec_headers = ["AIFF", "WAV", "FLAC", "CAF", "SD2", "IRCAM", "raw", "MAT4", "MAT5", "Sun", "PAF", "SVX", "NIST", "VOC", "W64", "PVF", "XI", "HTK", "SDS", "AVR"];
+    var rec_headers = ["aiff", "wav"];
     var rec_formats = [float: "32 bit float", int8: "8 bit int", int16: "16 bit int", int24: "24 bit int", int32: "32 bit int", mulaw: "mulaw", alaw: "alaw"];
 
     var thispath = PathName(BootWindow.filenameSymbol.asString).pathOnly;
