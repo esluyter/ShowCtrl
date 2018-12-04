@@ -67,11 +67,11 @@ LividControlTabView : SCViewHolder {
     }
 
     activateTab {
-        view.background_(Color.white)
+        defer { view.background_(Color.white) };
     }
 
     deactivateTab {
-        view.background_(Color.clear)
+        defer { view.background_(Color.clear) };
     }
 }
 
@@ -125,66 +125,90 @@ LividControlMainView : SCViewHolder {
         };
     }
     setStates { |knobStates, buttonStates, colors, texts|
-        32.do { |i|
-            var text = texts[i + 1] ?? "";
-            var lines = text.split($\n);
-            var color = colors[i + 1] ?? Color.black;
-            if (color.class == Symbol) {
-                color = Color.perform(color);
+        defer {
+            32.do { |i|
+                var text = texts[i + 1] ?? "";
+                var lines = text.split($\n);
+                var color = colors[i + 1] ?? Color.black;
+                if (color.class == Symbol) {
+                    color = Color.perform(color);
+                };
+                labels[i].drawFunc_({ |v|
+                    Pen.translate(35, v.bounds.height - 10);
+                    Pen.rotate(-pi/2);
+                    lines.do { |line, i|
+                        Pen.stringAtPoint(line, Point(0, i * 11), Font(Font.defaultMonoFace, 11, true), Color.white);
+                        Pen.stringAtPoint(line, Point(0, i * 11), Font(Font.defaultMonoFace, 11, true), color.blend(Color.black, 0.4).alpha_(0.8));
+                    };
+                });
+                labels[i].refresh;
+
+                knobs[i].knobView.color = [color.blend(Color.white, 0.7), color.blend(Color.black, 0.5), Color.clear, color.blend(Color.black, 0.5)];
+                this.updateKnob(i + 1, knobStates[i]);
             };
-            labels[i].drawFunc_({ |v|
-                Pen.translate(35, v.bounds.height - 10);
-                Pen.rotate(-pi/2);
-                lines.do { |line, i|
+            4.do { |i|
+                var text = texts[i + 33] ?? "";
+                var lines = text.split($\n);
+                var color = colors[i + 33] ?? Color.black;
+                if (color.class == Symbol) {
+                    color = Color.perform(color);
+                };
+                buttonLabels[i].drawFunc_({ |v|
+                    Pen.translate(0, 52);
+                    lines.do { |line, i|
+                        Pen.stringAtPoint(line, Point(0, i * 11), Font(Font.defaultMonoFace, 11, true), Color.white);
+                        Pen.stringAtPoint(line, Point(0, i * 11), Font(Font.defaultMonoFace, 11, true), color.blend(Color.black, 0.4).alpha_(0.8));
+                    };
+                });
+                buttonLabels[i].refresh;
+
+                buttons[i + 32].states_([[i + 33, color.blend(Color.black, 0.5), color.blend(Color.white, 0.7)], [i + 33, Color.white, Color(0, 0.6, 1)]])
+            };
+            8.do { |i|
+                var text = texts[i + 38] ?? "";
+                var lines = text.split($\n);
+                var color = colors[i + 38] ?? Color.black;
+                if (color.class == Symbol) {
+                    color = Color.perform(color);
+                };
+                buttonLabels[i + 4].drawFunc_({ |v|
+                  Pen.translate(0, 45);
+                  lines.do { |line, i|
                     Pen.stringAtPoint(line, Point(0, i * 11), Font(Font.defaultMonoFace, 11, true), Color.white);
                     Pen.stringAtPoint(line, Point(0, i * 11), Font(Font.defaultMonoFace, 11, true), color.blend(Color.black, 0.4).alpha_(0.8));
-                };
-            });
-            labels[i].refresh;
+                  };
+                });
+                buttonLabels[i + 4].refresh;
 
-            knobs[i].knobView.color = [color.blend(Color.white, 0.7), color.blend(Color.black, 0.5), Color.clear, color.blend(Color.black, 0.5)];
-            knobs[i].value_(knobStates[i]);
-        };
-        4.do { |i|
-            var text = texts[i + 33] ?? "";
-            var lines = text.split($\n);
-            var color = colors[i + 33] ?? Color.black;
-            if (color.class == Symbol) {
-                color = Color.perform(color);
+                buttons[i + 37].states_([[i + 38, color.blend(Color.black, 0.5), color.blend(Color.white, 0.7)], [i + 38, Color.white, Color(0, 0.6, 1)]])
             };
-            buttonLabels[i].drawFunc_({ |v|
-                Pen.translate(0, 52);
-                lines.do { |line, i|
-                    Pen.stringAtPoint(line, Point(0, i * 11), Font(Font.defaultMonoFace, 11, true), Color.white);
-                    Pen.stringAtPoint(line, Point(0, i * 11), Font(Font.defaultMonoFace, 11, true), color.blend(Color.black, 0.4).alpha_(0.8));
-                };
-            });
-            buttonLabels[i].refresh;
-
-            buttons[i + 32].states_([[i + 33, color.blend(Color.black, 0.5), color.blend(Color.white, 0.7)], [i + 33, Color.white, Color(0, 0.6, 1)]])
-        };
-        8.do { |i|
-            var text = texts[i + 38] ?? "";
-            var lines = text.split($\n);
-            var color = colors[i + 38] ?? Color.black;
-            if (color.class == Symbol) {
-                color = Color.perform(color);
-            };
-            buttonLabels[i + 4].drawFunc_({ |v|
-              Pen.translate(0, 45);
-              lines.do { |line, i|
-                Pen.stringAtPoint(line, Point(0, i * 11), Font(Font.defaultMonoFace, 11, true), Color.white);
-                Pen.stringAtPoint(line, Point(0, i * 11), Font(Font.defaultMonoFace, 11, true), color.blend(Color.black, 0.4).alpha_(0.8));
-              };
-            });
-            buttonLabels[i + 4].refresh;
-
-            buttons[i + 37].states_([[i + 38, color.blend(Color.black, 0.5), color.blend(Color.white, 0.7)], [i + 38, Color.white, Color(0, 0.6, 1)]])
         };
     }
 
     updateKnob { |num, val|
-        defer { knobs[num - 1].value_(val) };
+        defer {
+            var knob = knobs[num - 1];
+            var colors = knob.knobView.color;
+            var alpha = if (val == 0) { 0.3 } { 1 };
+            knob.value_(val);
+            knob.knobView.color_([
+                colors[0].alpha_(alpha),
+                colors[1], colors[2],
+                colors[3].alpha_(alpha)
+            ]);
+        };
+    }
+
+    blinkButton { |num|
+        {
+            buttons[num - 1].value_(1);
+            0.1.wait;
+            buttons[num - 1].value_(0)
+        }.fork(AppClock);
+    }
+
+    setButton { |num, val|
+        defer { buttons[num - 1].value_(val.asInt); };
     }
 }
 
@@ -219,24 +243,36 @@ LividControlView : SCViewHolder {
         lividControl.addDependant(this);
     }
 
-    update { |obj, what, thing|
+    update { |obj, what, args|
         var bank, num, val;
         switch (what)
             {\knob} {
-                #bank, num, val = thing;
+                #bank, num, val = args;
                 tabs[bank].updateKnob(num, val);
                 if (bank == lividControl.currentBank) {
                     mainView.updateKnob(num, val);
                 };
             }
+            {\buttonPush} {
+                #bank, num, val = args;
+                if (bank == lividControl.currentBank) {
+                    mainView.blinkButton(num)
+                };
+            }
+            {\button} {
+                #bank, num, val = args;
+                if (bank == lividControl.currentBank) {
+                    mainView.setButton(num, val);
+                };
+            }
             {\currentBank} {
                 tabs.do(_.deactivateTab);
-                tabs[thing].activateTab;
+                tabs[args].activateTab;
                 mainView.setStates(
-                    lividControl.knobStates[thing],
-                    lividControl.buttonStates[thing],
-                    lividControl.colors[thing],
-                    lividControl.labels[thing]);
+                    lividControl.knobStates[args],
+                    lividControl.buttonStates[args],
+                    lividControl.colors[args],
+                    lividControl.labels[args]);
             }
     }
 }

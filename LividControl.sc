@@ -2,14 +2,33 @@ LividControl {
     var <>a; // additional midi destinations
     var <>outDevice, <>inDevice;
     var <>knobFuncs, <>buttonFuncs, <>knobStates, <>buttonStates;
-    var <>numBanks, <currentBank = 0;
+    var <>numBanks, <currentBank = 0, <>bankChangeButton;
     var <>inChannel = 0, <>outChannel = 9;
     var <>colors, <>labels;
 
 
     currentBank_ { |newCurrentBank|
         currentBank = newCurrentBank;
+        knobStates[currentBank].do { |val, num|
+            outDevice.control(inChannel, num + 1, val);
+        };
+        if (bankChangeButton.notNil) {
+            outDevice.noteOn(0, 37, 127/3 * currentBank);
+        };
         this.changed(\currentBank, newCurrentBank);
+    }
+
+    incrementBank {
+        this.currentBank_(currentBank + 1 % numBanks);
+    }
+
+    decrementBank {
+        this.currentBank_(currentBank - 1 % numBanks);
+    }
+
+    addDestination { |destination|
+        destination.latency_(0);
+        a = a.add(destination);
     }
 
 
@@ -58,6 +77,12 @@ LividControl {
 
     handleButton { |bank, num, vel|
         var button = buttonFuncs[bank][num];
+
+        if (num == bankChangeButton) {
+            this.incrementBank;
+            ^false;
+        };
+
         if (button.asArray[0] == \toggle) {
             // handle toggle
             var state;
@@ -66,12 +91,8 @@ LividControl {
             button[1].value(state);
             // visual display
             if (bank == currentBank) {
-                if (state) {
-                    "% light on".format(num).postln;
-                } {
-                    "% light off".format(num).postln;
-                };
-                //outDevice.noteOn(inChannel, num, 127 * state.asInt)
+                //if (state) { "% light on".format(num).postln; } { "% light off".format(num).postln; };
+                outDevice.noteOn(inChannel, num, 127 * state.asInt)
             };
             this.changed(\button, [bank, num, state]);
         } {
@@ -82,14 +103,21 @@ LividControl {
             // update light
             if (bank == currentBank) {
                 {
-                    "% light on".format(num).postln;
-                    //outDevice.noteOn(0, num, 127);
+                    //"% light on".format(num).postln;
+                    outDevice.noteOn(0, num, 127);
                     0.1.wait;
-                    "% light off".format(num).postln;
-                    //outDevice.noteOn(0, num, 0);
+                    //"% light off".format(num).postln;
+                    outDevice.noteOn(0, num, 0);
                 }.fork(AppClock);
             };
             this.changed(\buttonPush, [bank, num, vel]);
         }
+    }
+
+
+
+    setKnob { |bank, num, val|
+        outDevice.control(inChannel, num, val);
+        this.handleKnob(bank, num, val);
     }
 }
