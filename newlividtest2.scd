@@ -69,13 +69,24 @@ nil.stop
 a = (
   knobStates: g.knobStates.deepCopy,
   buttonStates: g.buttonStates.deepCopy,
-  knobEnable: true!32 ! 4,
+  knobEnable: [true!32] ++ (false!34 ! 3),
   buttonEnable: true!45 ! 4,
   fadeTime: 4
+);
+b = (
+  knobStates: g.knobStates.deepCopy,
+  buttonStates: g.buttonStates.deepCopy,
+  knobEnable: [false!32] ++ (true!34 ! 3),
+  buttonEnable: true!45 ! 4,
+  fadeTime: 20
 );
 )
 
 a.postcs
+g.setKnobs(4.collect(_->(1..32)), 0)
 
+(
 g.restoreSnapshot(a);
+g.restoreSnapshot(b);
+)
 
