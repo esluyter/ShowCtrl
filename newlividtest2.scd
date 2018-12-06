@@ -1,18 +1,3 @@
-l = LividControl("Code", "Controls");
-l.makeWindow;
-l.addDestination(a);
-l.latency = 0;
-l.numBanks = 4;
-l.bankButton = 37;
-
-l.makeDef;
-
-l.setKnob(5, 127); // defaults to bank 0
-l.setKnob([1, 5], 127); // knob 5 in bank 1
-
-StackLayout
-
-
 (
 MIDIIn.connectAll;
 g = LividControl();
@@ -23,7 +8,10 @@ g.buttonFuncs = [
     24: [\toggle, { |on|
       if (on) { "hello there!".postln } { "goodbye".postln }
     } ],
-    26: { "whatever".postln }
+    26: { "whatever".postln },
+    23: \toggle,
+    22: \toggle,
+    21: \toggle
   ),
   (),
   (),
@@ -47,36 +35,47 @@ w.front
 )
 
 
-v.mainView.knobs[0].knobView.color
+~knob1 = 2;
+~knob2 = 18;
+~knob3 = 1->5;
+~knob4 = 1->6;
+~page1 = [~knob3, ~knob4];
+~page2 = [~knob1, ~knob2];
+
+g.setKnob(0, 20, 10)
+g.setKnobs(~knob1, 50)
+g.setKnobs(~knob2, 35)
+g.setKnobs(~page1, 100)
+g.setKnobs([~page1, ~page2], 0)
+g.setKnobs([2->(1..32), 3->(1..32), ~page1, ~page2], 100)
+g.setKnobs(4.collect(_->(1..32)), 0)
+
+g.pushButtons([2, 3, 4, 24, 42, 43, 44])
+g.pushButtons(0->(21..24))
+g.setButtons((21..24), \off)
 
 
-g.setKnob(0, 20, 0)
+g.fadeKnob(0, 32, 100, 5)
+g.fadeKnob(0, 32, 0, 0.3)
+g.setKnobs(32, 0)
 
 
-b = [[0, (1..32)], [[1, 2], [3, 4]], [0, 5], [0, 6]]
-b.shape
-b.collect(_.class)
+r = fork { inf.do { |i| i.postln; 0.2.wait; }}
 
-[0, (1..32)].shape
-a.rank
+r.stop
+nil.stop
 
 (
-f = { |arr|
-  arr.postln;
-  if (arr.flop.size > 2) {
-    arr.do { |item|
-      item.postln;
-      f.(item);
-    }
-  }
-};
-f.(a)
+a = (
+  knobStates: g.knobStates.deepCopy,
+  buttonStates: g.buttonStates.deepCopy,
+  knobEnable: true!32 ! 4,
+  buttonEnable: true!45 ! 4,
+  fadeTime: 4
+);
 )
 
+a.postcs
 
+g.restoreSnapshot(a);
 
-
-0->4
-3->6
-
-[`[0, 3], `[0, 5], [`[1, 6], `[3, (1..32)]]].flat

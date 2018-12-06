@@ -76,7 +76,7 @@ LividControlTabView : SCViewHolder {
 }
 
 LividControlMainView : SCViewHolder {
-    var <labels, <buttonLabels, <knobs, <buttons;
+    var <labels, <buttonLabels, <knobs, <buttons, <>knobAction, <>buttonAction;
 
     *new { |parent, bounds|
         ^super.new.init(parent, bounds);
@@ -104,6 +104,7 @@ LividControlMainView : SCViewHolder {
 
             knob.value_(0);
             //knob.action_({ |knob| l.setKnob(i + 1, knob.value) });
+            knob.action_({ |knob| knobAction.value(i + 1, knob.value) });
 
             knobView.bounds = knobView.bounds.width_(34).height_(34).moveBy(6, -8);
             knob.labelView.stringColor_(Color.black.alpha_(0.06)).bounds_(knob.labelView.bounds.moveBy(0, -6).height_(40)).font_(Font.default.size_(38)).align_(\left);
@@ -123,6 +124,7 @@ LividControlMainView : SCViewHolder {
         buttons = buttons ++ 8.collect { |i|
           Button(view, Rect(i * 70 + 85, 375, 24, 24));
         };
+        buttons.do { |butt, i| butt.action = { buttonAction.value(i + 1) } };
     }
     setStates { |knobStates, buttonStates, colors, texts|
         defer {
@@ -162,7 +164,7 @@ LividControlMainView : SCViewHolder {
                 });
                 buttonLabels[i].refresh;
 
-                buttons[i + 32].states_([[i + 33, color.blend(Color.black, 0.5), color.blend(Color.white, 0.7)], [i + 33, Color.white, Color(0, 0.6, 1)]])
+                buttons[i + 32].states_([[i + 33, color.blend(Color.black, 0.5), color.blend(Color.white, 0.7)], [i + 33, Color.white, Color(0, 0.6, 1)]]);
             };
             8.do { |i|
                 var text = texts[i + 38] ?? "";
@@ -180,7 +182,11 @@ LividControlMainView : SCViewHolder {
                 });
                 buttonLabels[i + 4].refresh;
 
-                buttons[i + 37].states_([[i + 38, color.blend(Color.black, 0.5), color.blend(Color.white, 0.7)], [i + 38, Color.white, Color(0, 0.6, 1)]])
+                buttons[i + 37].states_([[i + 38, color.blend(Color.black, 0.5), color.blend(Color.white, 0.7)], [i + 38, Color.white, Color(0, 0.6, 1)]]);
+            };
+
+            45.do { |i|
+                this.setButton(i + 1, buttonStates[i]);
             };
         };
     }
@@ -232,7 +238,13 @@ LividControlView : SCViewHolder {
         tabView = View()
             .layout_(HLayout(*tabs).margins_(0))
             .maxSize_(53);
-        mainView = LividControlMainView();
+        mainView = LividControlMainView()
+            .knobAction_({ |num, val|
+                lividControl.setKnob(lividControl.currentBank, num, val);
+            })
+            .buttonAction_({ |num|
+                lividControl.pushButton(lividControl.currentBank, num);
+            });
         mainView.setStates(
             lividControl.knobStates[currentBank],
             lividControl.buttonStates[currentBank],
