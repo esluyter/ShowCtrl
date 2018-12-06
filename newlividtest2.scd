@@ -1,6 +1,12 @@
 (
 MIDIIn.connectAll;
-g = LividControl();
+g = LividControl("Code", "Controls");
+g.bankChangeButton = 37;
+g.addDestination(MIDIOut.newByName("IAC Driver", "Bus 1"));
+g = LividControl("Code", "Controls");
+g.bankChangeButton = 37;
+g.addDestination(MIDIOut.newByName("IAC Driver", "Bus 1"));
+g = LividControl("Code", "Controls");
 g.bankChangeButton = 37;
 g.addDestination(MIDIOut.newByName("IAC Driver", "Bus 1"));
 g.buttonFuncs = [
@@ -29,9 +35,7 @@ g.labels = [
   (),
   ()
 ];
-w = Window.new("Livid Code", Rect(Window.screenBounds.width, 0, 640, 493));
-v = LividControlView(w, Rect(0, 0, 640, 490), lividControl: g);
-w.front
+g.makeWindow;
 )
 
 

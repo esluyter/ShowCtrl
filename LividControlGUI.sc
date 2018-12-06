@@ -1,5 +1,5 @@
 LividControlTabView : SCViewHolder {
-    var <knobs, <>colors, <>action;
+    var <knobs, <colors, <>action;
 
     *new { |parent, bounds, bankNum = 0, colors, states, action|
         ^super.new.init(parent, bounds, bankNum, colors, states, action);
@@ -47,6 +47,26 @@ LividControlTabView : SCViewHolder {
             .mouseDownAction_({
                 action.value(bankNum)
             });
+    }
+
+    colors_ { |newcolors|
+        colors = newcolors;
+        defer {
+            knobs.flat.do { |knob, i|
+                var num = i + 1;
+                var val = knob.value;
+                var alpha = if (val == 0) { 0.3 } { 1 };
+                var color = colors[num] ?? Color.black;
+                if (color.class == Symbol) {
+                    color = Color.perform(color)
+                };
+                knob.color_([
+                    color.blend(Color.white, 0.7).alpha_(alpha),
+                    color.blend(Color.black, 0.5), Color.clear,
+                    color.blend(Color.black, 0.5).alpha_(alpha)
+                ]);
+            };
+        };
     }
 
     updateKnob { |num, val|
@@ -240,7 +260,7 @@ LividControlView : SCViewHolder {
             .maxSize_(53);
         mainView = LividControlMainView()
             .knobAction_({ |num, val|
-                lividControl.setKnob(lividControl.currentBank, num, val);
+                lividControl.fadeKnob(lividControl.currentBank, num, val, 0);
             })
             .buttonAction_({ |num|
                 lividControl.pushButton(lividControl.currentBank, num);
@@ -285,6 +305,15 @@ LividControlView : SCViewHolder {
                     lividControl.buttonStates[args],
                     lividControl.colors[args],
                     lividControl.labels[args]);
+            }
+            {\styles} {
+                tabs.do({ |tab, i| tab.colors_(lividControl.colors[i]) });
+                mainView.setStates(
+                    lividControl.knobStates[lividControl.currentBank],
+                    lividControl.buttonStates[lividControl.currentBank],
+                    lividControl.colors[lividControl.currentBank],
+                    lividControl.labels[lividControl.currentBank],
+                );
             }
     }
 }

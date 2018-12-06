@@ -4,7 +4,7 @@ LividControl {
     var <>knobFuncs, <>buttonFuncs, <knobStates, <buttonStates, <knobRouts;
     var <>numBanks, <currentBank = 0, <>bankChangeButton;
     var <>inChannel = 0, <>outChannel = 9;
-    var <>colors, <>labels;
+    var <colors, <labels;
 
 
     currentBank_ { |newCurrentBank|
@@ -31,6 +31,56 @@ LividControl {
     addDestination { |destination|
         destination.latency_(0);
         a = a.add(destination);
+    }
+
+    setStyles { |...pairs|
+        pairs.pairsDo { |num, val|
+            var color = false, label = false;
+            val.asArray.do { |item|
+                if (item.class == String) {
+                    label = item;
+                };
+                if (item.class == Color || (item.class == Symbol)) {
+                    color = item;
+                };
+                if (item.isNil) {
+                    color = nil;
+                    label = nil;
+                };
+            };
+            num.asArray.flat.do { |n|
+                if (n.class == Association) {
+                    if (n.value.isArray) {
+                        n.value.do { |value|
+                            // case like num = 2->(1..32)
+                            if (color != false) {
+                                colors[n.key][value] = color;
+                            };
+                            if (label != false) {
+                                labels[n.key][value] = label;
+                            };
+                        };
+                    } {
+                        // case like num = 2->1
+                        if (color != false) {
+                            colors[n.key][n.value] = color;
+                        };
+                        if (label != false) {
+                            labels[n.key][n.value] = label;
+                        };
+                    };
+                } {
+                    // case like num = 5
+                    if (color != false) {
+                        colors[0][n] = color;
+                    };
+                    if (label != false) {
+                        labels[0][n] = label;
+                    };
+                };
+            };
+            this.changed(\styles);
+        }
     }
 
 
@@ -64,6 +114,8 @@ LividControl {
 
     makeDef {
         MIDIdef.cc(\lividknobs, { |val, num|
+            knobRouts[currentBank][num - 1].stop;
+            knobRouts[currentBank][num - 1] = nil;
             this.handleKnob(currentBank, num, val);
         }, chan: inChannel, srcID: inDevice.uid);
 
@@ -254,5 +306,14 @@ LividControl {
                 };
             };
         };
+    }
+
+
+
+    makeWindow {
+        var win, view;
+        win = Window("Livid Code", Rect(Window.screenBounds.width, 0, 640, 493)).front;
+        view = LividControlView(win, Rect(0, 0, 640, 490), lividControl: this);
+        ^win;
     }
 }
