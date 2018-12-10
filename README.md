@@ -4,7 +4,7 @@ This repository contains miscellaneous SuperCollider classes I use to run theatr
 
 ## CueList
 
-Interface for organizing SC functions into an ordered list of named cues, with functionality for nesting, linking, color coding, etc.
+Interface for organizing SC functions into an ordered list of named cues, with functionality for nesting, linking, color coding, etc. Note that GUI requires my fork of SuperCollider, as well as my CodeView extensions.
 
 Related files:
 - CueList.sc
