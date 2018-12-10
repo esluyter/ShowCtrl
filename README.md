@@ -29,3 +29,20 @@ c.fadeSends(~everyone,
 
 Related files:
 - YamahaBoard.sc
+
+## LividControl
+
+Interface for the now-discontinued Livid Code controller. Includes "bank" functionality with full state memory, programmatic knob / button control including fades to a target value, GUI visualization of current state, and interface for saving "snapshots" of current state with selective parameter recall over specified fade time.
+
+Related files:
+- LividControl.sc
+- LividControlGUI.sc
+- LividPresets.sc
+
+## BootWindow
+
+An interface for setting server options before booting the server.
+
+Related files:
+- BootWindow.sc
+- settings.txt
