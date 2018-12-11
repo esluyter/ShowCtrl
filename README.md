@@ -36,6 +36,8 @@ Related files:
 
 Interface for the now-discontinued Livid Code controller. Includes "bank" functionality with full state memory, programmatic knob / button control including fades to a target value, GUI visualization of current state, and interface for saving "snapshots" of current state with selective parameter recall over specified fade time.
 
+![livid](img/livid.png)
+
 Related files:
 - LividControl.sc
 - LividControlGUI.sc
@@ -44,6 +46,8 @@ Related files:
 ## BootWindow
 
 An interface for setting server options before booting the server.
+
+![boot](img/boot.png)
 
 Related files:
 - BootWindow.sc
