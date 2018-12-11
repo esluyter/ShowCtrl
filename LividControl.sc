@@ -203,22 +203,28 @@ LividControl {
     }
 
     setKnobs { |...pairs|
+        var dur = 0;
+
         pairs.pairsDo { |num, val|
-            val = val.asArray.flat;
-            num.asArray.flat.do { |n, i|
-                if (n.class == Association) {
-                    if (n.value.isArray) {
-                        n.value.do { |value|
-                            // case like num = 2->(1..32)
-                            this.fadeKnob(n.key, value, val.wrapAt(i), 0);
+            if (num == \dur) {
+                dur = val;
+            } {
+                val = val.asArray.flat;
+                num.asArray.flat.do { |n, i|
+                    if (n.class == Association) {
+                        if (n.value.isArray) {
+                            n.value.do { |value|
+                                // case like num = 2->(1..32)
+                                this.fadeKnob(n.key, value, val.wrapAt(i), dur);
+                            };
+                        } {
+                            // case like num = 2->1
+                            this.fadeKnob(n.key, n.value, val.wrapAt(i), dur);
                         };
                     } {
-                        // case like num = 2->1
-                        this.fadeKnob(n.key, n.value, val.wrapAt(i), 0);
+                        // case like num = 5
+                        this.fadeKnob(0, n, val.wrapAt(i), dur);
                     };
-                } {
-                    // case like num = 5
-                    this.fadeKnob(0, n, val.wrapAt(i), 0);
                 };
             };
         };
