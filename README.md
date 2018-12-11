@@ -47,6 +47,8 @@ Related files:
 
 An interface for setting server options before booting the server.
 
+![boot](img/boot.png)
+
 Related files:
 - BootWindow.sc
 - settings.txt
